@@ -1,0 +1,626 @@
+---
+title: '`r paste("项目报告：", params$projectName, sep = " ")`'
+date: '`r format(Sys.Date(), "%Y年%m月%d日")`'
+author: '`r params$authorName`'
+output:
+  html_document:
+    theme: flatly
+    toc: true
+    toc_float: true
+    number_sections: true
+    css: style.css
+params:
+  myRawData: NA
+  sampleGroup: NA
+  dataGlobal3PCA: NA
+  OPLSDAGroup: NA
+  statTable: NA
+  VCGroup: NA
+  myStat: NA
+  mySamplePrep: NA
+  mySampleAnalysis: NA
+  myDataProcessing: NA
+  myPCAPlot: NA
+  myHMPlot: NA
+  dataGlobal3Transform: NA
+  BPGroup: NA
+  BPTransform: NA
+  KMTrendPlot: NA
+  KMTable: NA
+  projectName: NA
+  authorName: NA
+  showIntro: NA
+  showMethods: NA
+  reportLanguage: zh
+editor_options:
+  chunk_output_type: console
+---
+
+```{r}
+#| label = setup,
+#| echo = FALSE,
+#| warning = FALSE,
+#| message = FALSE
+
+# Prepare parameters -----------------------------------------------------------
+knitr::opts_chunk$set(echo = FALSE)
+
+myRawData <- params$myRawData
+dataGlobal3PCA <- params$dataGlobal3PCA
+OPLSDAGroup <- params$OPLSDAGroup
+statTable <- params$statTable
+VCGroup <- params$VCGroup
+myStat <- params$myStat
+sampleGroup <- params$sampleGroup
+mySamplePrep <- params$mySamplePrep
+mySampleAnalysis <- params$mySampleAnalysis
+myDataProcessing <- params$myDataProcessing
+dataGlobal3Transform <- params$dataGlobal3Transform
+BPGroup <- params$BPGroup
+
+# Add an ID column to the raw data
+myRawData <- myRawData %>%
+  dplyr::mutate(ID = paste0("ID", row.names(.))) %>%
+  dplyr::relocate(ID)
+```
+
+<img src="logo.png" height="150" style="position:absolute; top:90px; right:10px;" alt="MetaboReport logo"/>
+
+<div style="height:120px;"></div>
+
+```{asis, echo = as.logical(params$showIntro)}
+# 引言
+
+代谢组学通过系统分析生物体系中的小分子代谢物，揭示其组成及动态变化。根据研究目的和应用场景，常用的分析策略主要包括以下三类：
+
+**非靶向分析**（亦称全局代谢组学）旨在以良好的重复性尽可能广泛地检测代谢物。该方法通常获得相对丰度或半定量结果，而非绝对浓度；数据采集前也无需预先确定全部代谢物的身份。
+
+**靶向分析**针对一组预先确定的代谢物开展检测。在具备合适校准曲线和标准品的条件下，可获得代谢物的绝对浓度。
+
+**半靶向分析**（常称为代谢轮廓分析）介于非靶向与靶向分析之间，面向范围较广的一组预定义代谢物，通常报告相对丰度或半定量结果。
+
+本报告汇总本项目的数据分析结果，并在各章节提供必要的背景说明和结果解读要点。
+
+> <span style = "color : #FF8300">**提示：**</span>
+>
+> (1) 表格和部分图形支持交互操作，可用于搜索、缩放、平移或查看详细信息。为确保报告可独立打开，其他图形采用静态形式。
+>
+> (2) 可在 **MetaboReport** 的 `Statistics` 页面下载满足发表要求的 600 dpi 静态图。
+>
+> (3) 如需开展其他分析，可使用统计表上方的下载控件导出 CSV 或 Excel 格式的数据。
+```
+
+```{r}
+#| label = methods,
+#| echo = FALSE,
+#| results = 'asis'
+
+if (isTRUE(as.logical(params$showMethods))) {
+  cat(format_report_methods(
+    sample_preparation = mySamplePrep,
+    sample_analysis = mySampleAnalysis,
+    data_processing = myDataProcessing,
+    language = params$reportLanguage
+  ))
+}
+```
+
+# 结果
+
+## 质量控制
+
+> <span style = "color : #FF8300">**注意：**</span>
+>
+> 如果您的项目不包含 QC 样品，可以跳过本节。
+
+数据的稳定性与重复性是获得可靠分析结论的基础。在大规模代谢组学研究中，检测器响应、保留时间和质量准确度均可能随分析序列发生漂移。因此，在数据处理前应系统检查原始数据，以识别潜在测量偏差并评估分析系统的稳定性 [2]。
+
+代谢组学研究通常通过质量控制（QC）流程监测、评估并校正分析变异。常用 QC 材料包括混合 QC 样品、参考材料、标准参考材料以及长期参考（LTR）样品。
+
+### 基于 PCA 的质量控制评估
+
+主成分分析（PCA）可用于快速评估完整数据集的整体结构。若数据中包含 QC 样品，应重点查看“统计结果”部分 PCA 得分图中 QC 样品的聚集情况。
+
+理想情况下，与全部样品的总体变异相比，QC 样品应在 PCA 得分图中紧密聚集。当混合 QC 能较好代表生物样品的平均组成时，其位置通常接近得分图中心。QC 分布异常可能提示样品制备或仪器分析过程存在变异，也可能表明混合 QC 未能充分代表全部生物样品。
+
+QC 样品紧密聚集通常表明分析重复性良好，但对整体数据质量作出判断时，仍需结合其他 QC 指标综合评估 [1]。
+
+### 综合质量控制报告
+
+本项目还可能提供由 R 包 **RawHummus** 生成的 HTML 质量控制报告。RawHummus 基于 QC 样品，从液相色谱（LC）峰形、保留时间（RT）、质量准确度、检测器响应和碎裂等方面，利用 12 项指标对代谢组学数据质量进行综合评估 [2]。
+
+> <span style = "color : #FF8300">**注意：**</span>
+>
+> 有关数据质量的详细评估，请参阅 RawHummus 报告。
+>
+> 根据期刊要求，RawHummus 报告可考虑用作补充材料。
+>
+> 请在论文中引用 RawHummus 相关文献 [2]。
+
+
+## 统计结果
+
+### PCA
+
+主成分分析（PCA）是一种无监督多变量分析方法，可将一组相关变量转换为彼此线性不相关的主成分。第一主成分解释数据中的最大变异，后续主成分依次解释剩余变异。PCA 常用于降维并展示数据的整体结构。
+
+PCA 得分反映各样品在主成分空间中的位置，通常以 PC1 对 PC2 的二维得分图展示。图中每个点代表一个样品；点之间距离越近，说明其整体代谢特征越相似。按样品类型着色有助于评估 QC 样品的一致性，并识别潜在离群样品。
+
+
+```{r}
+#| label = PCA,
+#| echo = FALSE,
+#| warning = FALSE,
+#| message = FALSE,
+#| out.width = "100%"
+#(2) show PCA plot--------------------------------------------------------------
+
+params$myPCAPlot +
+  ggplot2::labs(color = "分组", fill = "分组")
+```
+> <span style = "color : #FF8300">**注意：**</span>
+>
+> PCA 得分图用于展示数据的整体结构并辅助识别潜在离群样品；若包含 QC 样品，还可用于评估分析重复性。
+
+### 聚类热图
+
+聚类热图以颜色梯度呈现数值大小。通过对样品和质谱特征进行聚类，可识别具有相似变化模式的样品或特征集合。下图中，行代表样品，列代表质谱特征。
+
+
+```{r}
+#| label = CompleteHeatmap,
+#| echo = FALSE,
+#| warning = FALSE,
+#| message = FALSE,
+#| out.width = "100%"
+#(2) show heatmap plot----------------------------------------------------------
+
+params$myHMPlot
+```
+
+> <span style = "color : #FF8300">**注意：**</span>
+>
+> 根据 **MetaboReport** 工作流程中的设置，热图可以包含全部检测到的质谱特征，也可以仅包含具有统计学显著性的特征。
+>
+> 1. 使用全部质谱特征（或代谢物）构建的热图可概览数据结构。
+>
+> 2. 使用筛选后的差异质谱特征（或代谢物）构建热图，可更直观地展示样品组间差异。
+
+
+### 数据概览
+
+**表 1：统计分析结果**
+
+```{r}
+#| label = statistics,
+#| echo = FALSE,
+#| warning = FALSE,
+#| message = FALSE,
+#| out.width = "100%"
+
+#(3) show statistical result table----------------------------------------------
+DT::datatable(myStat,
+              extensions = 'Buttons',
+              options = list(scrollX = TRUE,
+                             deferRender = TRUE,
+                             scroller = TRUE,
+                             fixedColumns = FALSE,
+                             ## add download options
+                             dom = 'Bfrtip',
+                             buttons = list('print',
+                                            list(extend = 'collection',
+                                                 buttons = c('csv', 'excel'),
+                                                 text = '下载')
+                                             ),
+                             ## customize header
+                               initComplete = DT::JS(
+                                 "function(settings, json) {",
+                                 "$(this.api().table().header()).css({'background-color': '#98be98', 'color': '#fff'});",
+                                "}")
+                              )
+               ) %>%
+   DT::formatStyle(names(myStat),
+                   fontSize = "90%"
+                   )
+```
+
+> <span style = "color : #FF8300">**如何解读表 1？**</span>
+>
+> **(1) 表 1 中的参数**
+>
+> `Fold_X_vs_Y`：X 组与 Y 组之间的倍数变化（FC），定义为 X/Y，用于描述某个代谢物或质谱特征在两组之间的相对变化。
+>
+> `AdjPvalue_X_vs_Y`：X 组与 Y 组比较的校正 p 值。
+>
+> `VIP_X_vs_Y`：X 组与 Y 组比较的变量投影重要性（VIP），该指标来源于 OPLS-DA 模型。详见 OPLS-DA 部分。
+>
+> **(2) 如何进行特征筛选？**
+>
+> 在代谢组学中，特征筛选可识别有助于区分 X 组和 Y 组的代谢物或质谱特征，例如野生型组和突变体组。
+>
+> 可结合 `FC`、校正 p 值和 `VIP`，从表 1 的统计结果中筛选候选差异特征。
+>
+> 下方汇总采用校正 p 值 < 0.05 且 VIP > 1 的标准，并将 FC >= 2 归类为升高，FC <= 0.5 归类为降低。
+
+--------------------------------------------------------------------------------
+
+### 差异代谢特征
+
+**表 2：差异特征统计汇总**
+
+采用以下标准筛选候选差异质谱特征或代谢物：
+
+候选特征需同时满足校正 **p 值 < 0.05** 和 **VIP > 1**。其中，**FC >= 2** 定义为相对升高，**FC <= 0.5** 定义为相对降低。
+
+```{r}
+#| label = summary,
+#| echo = FALSE,
+#| warning = FALSE,
+#| message = FALSE,
+#| out.width = "100%"
+
+## extract group information
+GroupInfo <- myStat %>%
+  dplyr::select(starts_with("AdjPvalue")) %>%
+  colnames() %>%
+  gsub(pattern = "AdjPvalue_", replacement = "")
+
+## prepare the table
+statSummary <- data.frame(matrix(0, ncol = 3, nrow = length(GroupInfo))) %>%
+  dplyr::rename("升高（FC >= 2）" = X1, "降低（FC <= 0.5）" = X2, "总计" = X3) %>%
+  dplyr::mutate(Group = GroupInfo) %>%
+  dplyr::relocate(Group)
+
+## get summary
+for (i in seq_along(GroupInfo)) {
+  dfIndex <- statSummary$Group[i]
+  filteredStat <- myStat %>%
+    dplyr::select(contains(dfIndex)) %>%
+    dplyr::filter(!!sym(paste0("AdjPvalue_", dfIndex)) < 0.05) %>%
+    dplyr::filter(!!sym(paste0("VIP_", dfIndex)) > 1)
+  statSummary[i, 2] <- filteredStat %>%
+    dplyr::filter(!!sym(paste0("Fold_", dfIndex)) >= 2) %>%
+    dplyr::count() %>%
+    as.numeric()
+  statSummary[i, 3] <- filteredStat %>%
+    dplyr::filter(!!sym(paste0("Fold_", dfIndex)) <= 0.5) %>%
+    dplyr::count() %>%
+    as.numeric()
+  statSummary[i, 4] <- statSummary[i, 2] + statSummary[i, 3]
+  }
+
+DT::datatable(dplyr::rename(statSummary, "比较组" = Group),
+              extensions = 'Buttons',
+              options = list(scrollX = TRUE,
+                             deferRender = TRUE,
+                             scroller = TRUE,
+                             fixedColumns = FALSE,
+                             ## add download options
+                             dom = 'Bfrtip',
+                             buttons = list('print',
+                                            list(extend = 'collection',
+                                                 buttons = c('csv', 'excel'),
+                                                 text = '下载'
+                                                 )
+                                             ),
+                             ## customize header
+                               initComplete = DT::JS(
+                                 "function(settings, json) {",
+                                 "$(this.api().table().header()).css({'background-color': '#98be98', 'color': '#fff'});",
+                                "}")
+                              )
+               )
+```
+
+以下分别列出各组间比较所筛选出的候选差异特征及其详细信息。
+
+
+```{r}
+#| label = diffTable,
+#| echo = FALSE,
+#| warning = FALSE,
+#| message = FALSE,
+#| results = 'asis',
+#| out.width = "100%"
+myStatInfo <- myStat %>%
+  dplyr::mutate(ID = sub("_.*", "", ID)) %>%
+  dplyr::select(contains(c("ID", "AdjPvalue_", "VIP_", "Fold_")))
+
+groupTableList <- htmltools::tagList() # Retain DT's required JavaScript dependencies.
+for (i in seq_along(GroupInfo)) {
+  dfIndex <- statSummary$Group[i]
+  groupTable <- myStatInfo %>%
+    dplyr::select(ID, contains(dfIndex)) %>%
+    dplyr::filter(!!sym(paste0("AdjPvalue_", dfIndex)) < 0.05) %>%
+    dplyr::filter(!!sym(paste0("VIP_", dfIndex)) > 1) %>%
+    dplyr::filter(!!sym(paste0("Fold_", dfIndex)) >= 2 | !!sym(paste0("Fold_", dfIndex)) <= 0.5) %>%
+    dplyr::left_join(x = ., y = myRawData, by = "ID")
+
+  groupTableList[[i]] <- DT::datatable(data = groupTable,
+                                       caption = paste0("表 3.", i, "：候选差异特征（比较组：", dfIndex, "）"),
+                                       extensions = 'Buttons',
+                                       options = list(scrollX = TRUE,
+                                                      deferRender = TRUE,
+                                                      scroller = TRUE,
+                                                      fixedColumns = FALSE,
+                                                      ## add download options
+                                                      dom = 'Bfrtip',
+                                                      buttons = list('print',
+                                                                     list(extend = 'collection',
+                                                                          buttons = c('csv', 'excel'),
+                                                                          text = '下载'
+                                                                          )
+                                                                     ),
+                                                      ## customize header
+                                                      initComplete = DT::JS(
+                                                        "function(settings, json) {",
+                                                        "$(this.api().table().header()).css({'background-color': '#98be98', 'color': '#fff'});",
+                                                        "}")
+                                                      )
+                                       )
+  }
+
+groupTableList
+```
+
+### OPLS-DA
+
+正交偏最小二乘判别分析（OPLS-DA）是一种监督多变量分析方法，可将与类别区分相关的预测变异从与类别无关的正交变异中分离出来。由于监督模型存在过拟合风险，结果解读应结合交叉验证和置换检验，而不应仅依据得分图中的组间分离程度。
+
+R2Y 表示模型对响应变量的拟合程度，Q2 用于估计模型的预测能力。若 R2Y 较高而 Q2 明显偏低，可能提示模型过拟合。置换检验得到的 pR2Y 和 pQ2 可为模型有效性评估提供进一步依据 [3]。
+
+`S-plot` 同时展示 OPLS-DA 模型中各特征的协方差（x 轴）和相关性（y 轴）。绝对协方差与绝对相关性较大且 VIP >= 1 的特征，可能对组间区分贡献较大，但仍需结合单变量统计结果和生物学证据进一步判断。
+
+```{r}
+#| label = OPLSDA,
+#| echo = FALSE,
+#| warning = FALSE,
+#| message = FALSE,
+#| out.width = '100%'
+#(6) show OPLSDA result---------------------------------------------------------
+
+## prepare data
+OPLSDALevel <- sampleGroup[, OPLSDAGroup]
+listnames <- report_group_pairs(OPLSDALevel)
+
+if (!length(listnames)) {
+  cat("OPLS-DA 至少需要两个非 QC 组。\n\n")
+}
+
+## plot
+for (i in seq_along(listnames)){
+  dfOPLSDA <- cbind.data.frame(dataGlobal3PCA, Group = sampleGroup[, OPLSDAGroup]) %>%
+    dplyr::filter(Group %in% listnames[[i]])
+  matrixOPLSDA <- dplyr::select(dfOPLSDA, -Group)
+  groupOPLSDA <- as.factor(dfOPLSDA$Group)
+
+  ## perform OPLSDA
+  resultOPLSDA <- tryCatch(
+    ropls::opls(
+      matrixOPLSDA,
+      groupOPLSDA,
+      log10L = FALSE,
+      scaleC = "none",
+      predI = 1,
+      permI = 20,
+      orthoI = 1,
+      crossvalI = min(length(groupOPLSDA), 7),
+      fig.pdfC = "none",
+      info.txtC = "none"
+    ),
+    error = function(error) NULL
+  )
+
+  if (is.null(resultOPLSDA)) {
+    cat("无法为以下比较拟合 OPLS-DA 模型：",
+        paste(listnames[[i]], collapse = " 与 "), "。\n\n", sep = "")
+    next
+  }
+
+  # Keep these as ggplot objects. plotly 4.10.x cannot convert ggplot2 4.x
+  # objects and aborts the entire report with "subscript out of bounds".
+  p1 <- showOPLSDA(resultOPLSDA, Group = groupOPLSDA, size = 1, interactive = FALSE) +
+    ggplot2::labs(
+      title = paste0("样品组：", levels(groupOPLSDA)[1], " 与 ", levels(groupOPLSDA)[2]),
+      x = paste0("预测得分 t[1]（", resultOPLSDA@modelDF$R2X[1] * 100, "%）"),
+      y = "正交得分 to[1]",
+      color = "分组",
+      fill = "分组"
+    )
+  p2 <- showSplot(matrixOPLSDA, resultOPLSDA, size = 1, interactive = FALSE) +
+    ggplot2::labs(title = "S 图", x = "协方差", y = "相关性")
+  print(p1)
+  print(p2)
+}
+```
+
+### 火山图
+
+```{r}
+#| label = volcanoPlot,
+#| echo = FALSE,
+#| warning = FALSE,
+#| message = FALSE
+#(6) show volcano plot result---------------------------------------------------
+
+## The code is used to generate a list of volcano plots
+VCGroupLevel <- sampleGroup[, VCGroup]
+listnames <- report_group_pairs(VCGroupLevel)
+
+if (!length(listnames)) {
+  cat("火山图至少需要两个非 QC 组。\n\n")
+}
+for (i in seq_along(listnames)){
+  volcanoPlot <- showVolcano(
+    result = statTable,
+    compare_group = listnames[[i]],
+    FC = 2,
+    pValue = 0.05,
+    interactive = FALSE
+  ) +
+    ggplot2::labs(
+      title = paste0("火山图：", listnames[[i]][1], " 与 ", listnames[[i]][2]),
+      color = "显著性"
+    ) +
+    ggplot2::scale_color_manual(
+      name = "显著性",
+      values = c(
+        "Not Significant" = "#B3B3B3",
+        "Significantly Up" = nature_colors[[1L]],
+        "Significantly Down" = nature_colors[[2L]]
+      ),
+      breaks = c("Not Significant", "Significantly Up", "Significantly Down"),
+      labels = c("不显著", "显著升高", "显著降低")
+    )
+  print(volcanoPlot)
+}
+```
+
+### K-means 聚类分析
+
+K-means 聚类分析可将具有相似变化趋势的质谱特征归入同一类别，从而识别不同样品组间具有代表性的变化模式。
+
+聚类趋势图展示各特征类别在不同样品组中的整体变化趋势。
+
+配套表格列出各特征的详细信息，包括代谢物名称（如有）、标准化峰面积及所属类别。
+
+**代谢轮廓聚类**
+```{r}
+#| label = KMTrendPlot,
+#| echo = FALSE,
+#| warning = FALSE,
+#| message = FALSE,
+#| out.width = '100%'
+#(8.2) show K-Means result------------------------------------------------------
+
+params$KMTrendPlot + ggplot2::ylab("标准化峰面积")
+```
+
+
+```{r}
+#| label = KMTable,
+#| echo = FALSE,
+#| warning = FALSE,
+#| message = FALSE,
+#| out.width = '100%'
+#(8.3) show K-Means result------------------------------------------------------
+
+DT::datatable(params$KMTable,
+              extensions = 'Buttons',
+              options = list(scrollX = TRUE,
+                             deferRender = TRUE,
+                             scroller = TRUE,
+                             fixedColumns = FALSE,
+                             dom = 'Bfrtip',
+                             buttons = list('print',
+                                            list(extend = 'collection',
+                                                 buttons = c('csv', 'excel'),
+                                                 text = '下载')
+                                             )
+                             ),
+              rownames = FALSE
+              )
+```
+
+
+### 柱状图
+
+柱状图展示所选代谢物在不同样品组中的平均丰度及组内变异。
+
+> <span style = "color : #FF8300">**注意：**</span>
+>
+> 绘图前会应用 **MetaboReport** 工作流程中选择的数据转换方法，具体方法请参阅 y 轴标签。
+>
+> 选择一个代谢物后，图形及对应表格将同步更新。
+
+
+```{r}
+#| label = BoxPlot,
+#| echo = FALSE,
+#| warning = FALSE,
+#| message = FALSE,
+#| out.width = '100%'
+#(8) show box plot result-------------------------------------------------------
+BPData <- dataGlobal3Transform %>%
+  dplyr::mutate(Group = sampleGroup[, BPGroup]) %>%
+  dplyr::filter(Group != "QC") %>%
+  tidyr::pivot_longer(!Group, names_to = "Metabolite", values_to = "Area") %>%
+  dplyr::mutate(Area = round(Area, 2)) %>%
+  dplyr::group_by(Metabolite, Group) %>%
+  dplyr::summarise(MEAN = round(mean(Area), 2), SD = round(sd(Area), 2))
+
+## must order data by the colored variable here to avoid mismatch of standard deviation.
+## See issue 15
+BPData <- BPData[order(BPData$Group), ]
+BPColors <- nature_palette(length(unique(BPData$Group)))
+BPData <- crosstalk::SharedData$new(BPData)
+metaboliteFilter <- crosstalk::filter_select(id = "Metabolite",
+                                             label = "选择一个代谢物",
+                                             sharedData = BPData,
+                                             group = ~ Metabolite,
+                                             multiple = FALSE
+                                             )
+yLegend <- switch(params$BPTransform,
+                  none = "原始峰面积",
+                  log2 = "Log2 转换后的峰面积",
+                  log10 = "Log10 转换后的峰面积"
+                  )
+
+BPPlot <- plotly::plot_ly(data = BPData,
+                          x = ~ Group,
+                          y = ~ MEAN,
+                          color = ~ Group,
+                          colors = BPColors,
+                          marker = list(line = list(color = 'grey', width = 1.5)),
+                          error_y = ~list(array = SD, color = 'grey'),
+                          type = 'bar'
+                          ) %>%
+  plotly::layout(
+    xaxis = list(title = "分组"),
+    yaxis = list(categoryorder = "trace", title = yLegend)
+  ) %>%
+  plotly::config(toImageButtonOptions = list(format = "svg", filename = "plot"))
+
+filter <- crosstalk::bscols(
+  metaboliteFilter,
+  BPPlot,
+  widths = 12
+  )
+
+crosstalk::bscols(filter)
+```
+
+**表 4：所选代谢物的汇总信息**
+
+```{r}
+#| label = BarPlotTable,
+#| echo = FALSE,
+#| warning = FALSE,
+#| message = FALSE,
+#| out.width = '100%'
+#(8) show box plot table -------------------------------------------------------
+
+DT::datatable(BPData,
+              colnames = c("代谢物", "分组", "均值", "标准差"),
+              options = list(scrollX = TRUE,
+                             deferRender = TRUE,
+                             scroller = TRUE,
+                             fixedColumns = FALSE
+                             ),
+              rownames = FALSE
+              )
+```
+
+
+
+# 软件引用
+
+> Dong, Y. and Malitsky, S., 2024. MetaboReport: from metabolomics data analysis to comprehensive reporting. *Bioinformatics*, *40*(6), p.btae373.
+
+# 参考文献
+
+[1] Broadhurst, D., Goodacre, R., Reinke, S.N., Kuligowski, J., Wilson, I.D., Lewis, M.R. and Dunn, W.B., 2018. Guidelines and considerations for the use of system suitability and quality control samples in mass spectrometry assays applied in untargeted clinical metabolomic studies. *Metabolomics*, *14*(6), pp.1-17.
+
+[2] Dong, Y., Kazachkova, Y., Gou, M., Morgan, L., Wachsman, T., Gazit, E. and Birkler, R.I.D., 2022. RawHummus: an R Shiny app for automated raw data quality control in metabolomics. *Bioinformatics*, *38*(7), pp.2072-2074.
+
+[3] Westerhuis, J.A., Hoefsloot, H.C., Smit, S., Vis, D.J., Smilde, A.K., van Velzen, E.J., van Duijnhoven, J.P. and van Dorsten, F.A., 2008. Assessment of PLSDA cross validation. *Metabolomics*, *4*(1), pp.81-89.

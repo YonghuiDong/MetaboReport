@@ -1,6 +1,6 @@
 /* Whole document: */
 body {
-  font-family: Arial, "Helvetica Neue", Helvetica, sans-serif !important;
+  font-family: Arial, "PingFang SC", "Microsoft YaHei", "Noto Sans CJK SC", "Helvetica Neue", Helvetica, sans-serif !important;
   font-size: 15px !important;
   line-height: 1.55 !important;
   text-align: left !important;
@@ -8,7 +8,7 @@ body {
 
 /* Quoted text  */
 blockquote {
-  font-family: Arial, "Helvetica Neue", Helvetica, sans-serif !important;
+  font-family: Arial, "PingFang SC", "Microsoft YaHei", "Noto Sans CJK SC", "Helvetica Neue", Helvetica, sans-serif !important;
   background: white !important;
   border-left: 0.2em solid #76D7C4 !important;
   font-size: 15px !important;

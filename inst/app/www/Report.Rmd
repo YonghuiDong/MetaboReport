@@ -31,6 +31,7 @@ params:
   authorName: NA
   showIntro: NA
   showMethods: NA
+  reportLanguage: en
 editor_options:
   chunk_output_type: console
 ---
@@ -98,7 +99,8 @@ if (isTRUE(as.logical(params$showMethods))) {
   cat(format_report_methods(
     sample_preparation = mySamplePrep,
     sample_analysis = mySampleAnalysis,
-    data_processing = myDataProcessing
+    data_processing = myDataProcessing,
+    language = params$reportLanguage
   ))
 }
 ```

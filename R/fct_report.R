@@ -6,7 +6,7 @@ report_parameter_names <- c(
   "statTable", "VCGroup", "myStat", "myPCAPlot", "myHMPlot",
   "dataGlobal3Transform", "BPGroup", "BPTransform", "KMTrendPlot",
   "KMTable", "projectName", "authorName", "showIntro", "showMethods",
-  "mySamplePrep", "mySampleAnalysis", "myDataProcessing"
+  "mySamplePrep", "mySampleAnalysis", "myDataProcessing", "reportLanguage"
 )
 
 #' Build all pairwise comparisons for non-QC groups
@@ -20,29 +20,51 @@ report_group_pairs <- function(group) {
 
 #' Format the optional Materials and Methods section
 #'
+#' User-provided method text is inserted unchanged.
+#'
 #' @noRd
 format_report_methods <- function(
   sample_preparation,
   sample_analysis,
-  data_processing
+  data_processing,
+  language = "en"
 ) {
+  language <- match.arg(language, c("en", "zh"))
+  chinese <- identical(language, "zh")
   method_text <- function(x) {
     if (length(x) != 1L || is.na(x) || !nzchar(trimws(x))) {
-      return("*Not provided.*")
+      return(if (chinese) "*未提供。*" else "*Not provided.*")
     }
     x
   }
 
+  headings <- if (chinese) {
+    c("材料与方法", "样品制备", "仪器分析", "数据处理")
+  } else {
+    c("Materials and Methods", "Sample Preparation Method", "Sample Analysis Method", "Data Processing Method")
+  }
+  note <- if (chinese) {
+    paste0(
+      "> <span style = \"color : #FF8300\">**注意：**</span>\n>\n",
+      "> (1) 若以下方法信息不完整，请向负责相应实验或数据分析的人员核实。\n>\n",
+      "> (2) 如用于学术论文，请结合本研究的实际流程，并按照目标期刊要求进一步修改和完善。\n\n"
+    )
+  } else {
+    paste0(
+      "> <span style = \"color : #FF8300\">**Note:**</span>\n>\n",
+      "> (1) If a method is not provided below, ask the person who performed the corresponding experiment or analysis.\n>\n",
+      "> (2) Adapt the text to your study and journal requirements before using it in a manuscript.\n\n"
+    )
+  }
+
   paste0(
-    "# Materials and Methods\n\n",
-    "> <span style = \"color : #FF8300\">**Note:**</span>\n>\n",
-    "> (1) If a method is not provided below, ask the person who performed the corresponding experiment or analysis.\n>\n",
-    "> (2) Adapt the text to your study and journal requirements before using it in a manuscript.\n\n",
-    "## Sample Preparation Method\n\n",
+    "# ", headings[[1L]], "\n\n",
+    note,
+    "## ", headings[[2L]], "\n\n",
     method_text(sample_preparation), "\n\n",
-    "## Sample Analysis Method\n\n",
+    "## ", headings[[3L]], "\n\n",
     method_text(sample_analysis), "\n\n",
-    "## Data Processing Method\n\n",
+    "## ", headings[[4L]], "\n\n",
     method_text(data_processing), "\n"
   )
 }
@@ -64,6 +86,9 @@ validate_report_params <- function(params) {
       paste(empty, collapse = ", ")
     )
   }
+  if (!params$reportLanguage %in% c("en", "zh")) {
+    stop("Unsupported report language: ", params$reportLanguage)
+  }
   invisible(params)
 }
 
@@ -74,8 +99,8 @@ validate_report_params <- function(params) {
 #'
 #' @param params Named report parameter list.
 #' @param output_file Exact destination path supplied by Shiny.
-#' @param template_dir Directory containing `Report.Rmd`, `reportCSS/style.css`,
-#'   and `img/logo.png`.
+#' @param template_dir Directory containing both report templates, report CSS,
+#'   and the logo image.
 #' @param progress Optional function called with the current step and description.
 #' @return The normalized output path, invisibly.
 #' @noRd
@@ -89,8 +114,9 @@ render_metabo_report <- function(
   validate_report_params(params)
 
   if (!is.null(progress)) progress(3, "Prepare report files")
+  template <- if (identical(params$reportLanguage, "zh")) "Report_zh.Rmd" else "Report.Rmd"
   source_files <- c(
-    report = file.path(template_dir, "Report.Rmd"),
+    report = file.path(template_dir, template),
     css = file.path(template_dir, "reportCSS", "style.css"),
     logo = file.path(template_dir, "img", "logo.png")
   )

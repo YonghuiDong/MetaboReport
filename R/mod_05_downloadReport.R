@@ -22,7 +22,7 @@ mod_05_downloadReport_ui <- function(id){
                  collapsed = FALSE,
                  closable = FALSE,
                  p("1. Generate and download a self-contained HTML report from this panel."),
-                 p("2. Report generation may take a few minutes. Click Generate Report once, then wait for the download button to appear."),
+                 p("2. Report generation may take a few minutes. Click Generate Report once, then choose an English or Chinese report."),
                  p("3. If generation fails, restart the app session and try again.")
                  )
              ),
@@ -103,7 +103,7 @@ mod_05_downloadReport_ui <- function(id){
                  collapsed = FALSE,
                  closable = FALSE,
                  p(style = "color:#b2182b;", shiny::icon("bell"), strong("Note: ")),
-                 p(style = "color:#b2182b;", "Generating the report may take a few minutes. Click the download button only once."),
+                 p(style = "color:#b2182b;", "Generating a report may take a few minutes. Click one download button only once."),
                  uiOutput(ns("report_button"))
                  )
              )
@@ -143,35 +143,56 @@ mod_05_downloadReport_server <- function(id, sfData, inputData, resultList) {
 
     output$report_button <- renderUI({
       req(input$getReport > 0)
-      downloadButton(
-        outputId = session$ns("report"),
-        label = "Download Report",
-        style = "color:#fff;background-color:#7570b3;border-color:#7570b3"
+      tagList(
+        downloadButton(
+          outputId = session$ns("report_en"),
+          label = "Download English Report",
+          style = "color:#fff;background-color:#7570b3;border-color:#7570b3"
+        ),
+        tags$span(style = "display:inline-block;width:10px;"),
+        downloadButton(
+          outputId = session$ns("report_zh"),
+          label = "下载中文报告",
+          style = "color:#fff;background-color:#00897b;border-color:#00897b"
+        )
       )
     })
 
-    output$report <- downloadHandler(
-      filename = function() paste0(Sys.Date(), "_Report.html"),
-      contentType = "text/html",
-      content = function(file) {
-        shiny::withProgress(
-          message = "Generating report",
-          min = 0,
-          max = 5,
-          value = 0,
-          {
-            shiny::setProgress(1, detail = "1/5 - Collect analysis results")
-            params <- report_params()
-            render_metabo_report(
-              params,
-              file,
-              progress = function(step, detail) {
-                shiny::setProgress(step, detail = paste0(step, "/5 - ", detail))
-              }
-            )
-          }
-        )
+    report_download <- function(language) {
+      chinese <- identical(language, "zh")
+      steps <- if (chinese) {
+        c("收集分析结果", "验证报告输入", "准备报告文件", "生成 HTML 报告", "完成下载文件")
+      } else {
+        c("Collect analysis results", "Validate report inputs", "Prepare report files", "Render HTML report", "Finalize download file")
       }
-    )
+
+      downloadHandler(
+        filename = function() paste0(Sys.Date(), "_Report_", toupper(language), ".html"),
+        contentType = "text/html",
+        content = function(file) {
+          shiny::withProgress(
+            message = if (chinese) "正在生成中文报告" else "Generating English report",
+            min = 0,
+            max = 5,
+            value = 0,
+            {
+              shiny::setProgress(1, detail = paste0("1/5 - ", steps[[1L]]))
+              params <- report_params()
+              params$reportLanguage <- language
+              render_metabo_report(
+                params,
+                file,
+                progress = function(step, detail) {
+                  shiny::setProgress(step, detail = paste0(step, "/5 - ", steps[[step]]))
+                }
+              )
+            }
+          )
+        }
+      )
+    }
+
+    output$report_en <- report_download("en")
+    output$report_zh <- report_download("zh")
   })
 }
