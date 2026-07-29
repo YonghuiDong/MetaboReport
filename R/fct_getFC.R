@@ -3,34 +3,37 @@
 #' @param x sample ion intensity matrix, row sample, column feature.
 #' @param Group sample group information
 #' @importFrom utils combn
-#' @return a dataframe with mean values and fold changes
+#' @return A data frame with pairwise fold changes.
 #' @noRd
 #' @examples
 #' dat <- matrix(runif(2*300), ncol = 2, nrow = 300)
 #' myGroup <- rep_len(LETTERS[1:2], 300)
 #' ret <- getFC(dat, Group = myGroup)
 
-getFC <- function(x, Group = NULL){
-  cat ("\n- Calculating fold changes...\n")
-  #(1) check input
-  Group <- as.factor(Group)
-  if(is.null(Group)){stop("Please include group information")}
-  if(length(levels(Group)) <= 1){stop("At least two sample groups should be included")}
-  if(length(Group) != nrow(x)){stop("Missing group informaiton detected")}
+getFC <- function(x, Group = NULL) {
+  cat("\n- Calculating fold changes...\n")
 
-  # calculate FC
-  i <- split(1:nrow(x), Group)
-  mean_int <- sapply(i, function(i){colMeans(x[i, ])})
-  x <- t(mean_int)
-  j <- combn(levels(Group), 2)
-  f_change1 <- x[j[1,],] / x[j[2,],]
-  f_change2 <- x[j[2,],] / x[j[1,],]
-  ## remove NaN in f_change Matrix
-  f_change <- rbind(f_change1, f_change2)
-  f_change[is.nan(f_change)] <- 0
-  rownames(f_change) <- c(paste0("Fold_", j[1,], "_vs_", j[2,]),
-                          paste0("Fold_", j[2,], "_vs_", j[1,]))
-  ret <- as.data.frame(t(f_change))
+  if (is.null(Group)) stop("Please include group information")
+  x <- as.matrix(x)
+  Group <- droplevels(factor(Group))
+  if (nlevels(Group) <= 1L) stop("At least two sample groups should be included")
+  if (length(Group) != nrow(x)) stop("Missing group information detected")
+
+  groups <- levels(Group)
+  group_sizes <- tabulate(Group, nbins = length(groups))
+  group_means <- rowsum(x, as.integer(Group), reorder = TRUE) / group_sizes
+  pairs <- utils::combn(seq_along(groups), 2L)
+  forward <- group_means[pairs[1L, ], , drop = FALSE] /
+    group_means[pairs[2L, ], , drop = FALSE]
+  reverse <- group_means[pairs[2L, ], , drop = FALSE] /
+    group_means[pairs[1L, ], , drop = FALSE]
+  fold_change <- rbind(forward, reverse)
+  fold_change[is.nan(fold_change)] <- 0
+  rownames(fold_change) <- c(
+    paste0("Fold_", groups[pairs[1L, ]], "_vs_", groups[pairs[2L, ]]),
+    paste0("Fold_", groups[pairs[2L, ]], "_vs_", groups[pairs[1L, ]])
+  )
+
   cat(": FC calculation done!\n")
-  return(round(ret, 4))
+  round(as.data.frame(t(fold_change)), 4)
 }
