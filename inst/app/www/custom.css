@@ -39,6 +39,33 @@ body {
   font-size: 14px;
 }
 
+/* Analysis and report progress */
+#shiny-notification-panel {
+  width: 480px !important;
+  max-width: calc(100vw - 8px);
+}
+
+.shiny-notification.shiny-progress-notification {
+  padding: 20px 22px;
+}
+
+.shiny-progress-notification .progress {
+  height: 24px !important;
+  margin-bottom: 14px;
+}
+
+.shiny-progress-notification .progress-text .progress-message {
+  font-size: 22px !important;
+  line-height: 1.4;
+}
+
+.shiny-progress-notification .progress-text .progress-detail {
+  display: block;
+  margin-top: 6px;
+  font-size: 19px !important;
+  line-height: 1.4;
+}
+
 /* Quoted text  */
 blockquote {
   font-family: Arial, "Helvetica Neue", Helvetica, sans-serif;

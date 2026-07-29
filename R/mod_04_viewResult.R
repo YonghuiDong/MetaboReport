@@ -567,58 +567,91 @@ mod_04_viewResult_server <- function(id, sfData){
     })
 
     ##(2) Perform statistics----------------------------------------------------
-    statTable <- reactive({
+    analysisResult <- reactive({
       shiny::req(sfData$filter)
       shiny::req(sfData$filterNormTransform)
       shiny::req(sfData$clean)
       shiny::req(sfData$group)
       shiny::validate(need((ncol(sfData$clean) - 1) == nrow(sfData$group), message = "Please wait for data preprocessing to finish before clicking Start button."))
-      tFilter <- transformDF(sfData$filter, Group = sfData$group[, StatGroup()]) # filtered
-      tFilterNormTransform <- transformDF(sfData$filterNormTransform, Group = sfData$group[, StatGroup()]) # filtered, normalized and transformed
-      tClean <- transformDF(sfData$clean, Group = sfData$group[, StatGroup()]) # filtered, normalized, transformed and scaled data
-      Group <- sfData$group[, StatGroup()]
-      Group <- Group[Group != "QC"]
-      checkPair <- as.data.frame(table(Group)) # to valid paired test
+
       shiny::withProgress(
-        message = "Performing statistics; Be patient",
-        detail = "This may take a while...",
-        value = 0.4,
+        message = "Performing statistical analysis",
+        min = 0,
+        max = 8,
+        value = 0,
         {
-          if(input$statMethod == "tTest" & length(levels(as.factor(Group))) != 2) {return(NULL)}
-          if(input$statMethod == "ptTest" & length(levels(as.factor(Group))) != 2) {return(NULL)}
-          if(input$statMethod == "ptTest" & var(checkPair$Freq) != 0) {return(NULL)}
-          if(input$statMethod == "anovaRM" & var(checkPair$Freq) != 0) {return(NULL)}
+          shiny::setProgress(1, detail = "1/8 - Prepare analysis data")
+          Group <- sfData$group[, StatGroup()]
+          Group <- Group[Group != "QC"]
+          groupCount <- nlevels(as.factor(Group))
+          equalGroupSizes <- length(unique(as.integer(table(Group)))) == 1L
+          if(input$statMethod %in% c("tTest", "ptTest") && groupCount != 2L) {return(NULL)}
+          if(input$statMethod %in% c("ptTest", "anovaRM") && !equalGroupSizes) {return(NULL)}
+          tFilter <- transformDF(sfData$filter, Group = sfData$group[, StatGroup()])
+          tFilterNormTransform <- transformDF(sfData$filterNormTransform, Group = sfData$group[, StatGroup()])
+          tClean <- transformDF(sfData$clean, Group = sfData$group[, StatGroup()])
+
+          shiny::setProgress(2, detail = "2/8 - Calculate fold changes")
           statFC <- getFC(tFilter, Group = Group)
+
+          shiny::setProgress(3, detail = "3/8 - Calculate p-values")
           statP <- getP(tFilterNormTransform, Group = Group, Method = input$statMethod)
+
+          shiny::setProgress(4, detail = "4/8 - Adjust p-values")
           statP <- statP %>% dplyr::mutate_all(~ p.adjust(., method = input$pAdjMethod, n = length(.)))
+
+          shiny::setProgress(5, detail = "5/8 - Calculate VIP scores")
           statVIP <- getVIP(tClean, Group = Group)
+
+          shiny::setProgress(6, detail = "6/8 - Perform PCA")
+          pcaData <- transformDF(sfData$clean, Group = NULL, rowName = TRUE)
+          pcaResult <- stats::prcomp(pcaData, center = FALSE, scale. = FALSE)
+
+          shiny::setProgress(7, detail = "7/8 - Assemble statistical results")
           statTable <- cbind.data.frame(statFC, statP, statVIP)
           rownames(statTable) <- sfData$clean$ID
-          return(statTable)
-          })
+
+          filterDF <- subset(sfData$filter, select = -ID)
+          names(filterDF) <- paste0("rawArea_", names(filterDF))
+          cleanDF <- subset(sfData$clean, select = -ID)
+          names(cleanDF) <- paste0("processedAREA_", names(cleanDF))
+          combinedTable <- cbind.data.frame(ID = sfData$clean$ID, statTable, filterDF, cleanDF)
+          if(isTRUE(as.logical(as.numeric(input$SigFilter)))){
+            combinedTable <- combinedTable %>%
+              dplyr::filter(if_any(contains("Pvalue"), ~ . < input$SigP))
+          }
+          rownames(combinedTable) <- NULL
+
+          shiny::setProgress(8, detail = "8/8 - Prepare visualization data")
+          heatmapTable <- combinedTable %>%
+            dplyr::select(ID, starts_with("rawArea_")) %>%
+            dplyr::rename_with(~ gsub("rawArea_", "", .x, fixed = TRUE))
+          heatmapData <- transformDF(heatmapTable, Group = NULL, rowName = TRUE)
+
+          list(
+            statTable = statTable,
+            combinedTable = combinedTable,
+            pcaData = pcaData,
+            pcaResult = pcaResult,
+            heatmapData = heatmapData
+          )
+        }
+      )
     }) %>%
-      shiny::bindCache(sfData$filter, sfData$filterNormTransform, sfData$clean, sfData$group, input$statMethod, StatGroup(), input$pAdjMethod) %>%
+      shiny::bindCache(sfData$filter, sfData$filterNormTransform, sfData$clean, sfData$group, input$statMethod, StatGroup(), input$pAdjMethod, input$SigFilter, input$SigP) %>%
       shiny::bindEvent(input$viewStat)
 
-    ## Combine QC-filtered (raw area) & transformed peak areas (processed area) with Stat result
+    statTable <- reactive({
+      result <- analysisResult()
+      if(is.null(result)) return(NULL)
+      result$statTable
+    })
+
     combinedTable <- reactive({
-      shiny::req(sfData$filter)
-      shiny::req(sfData$clean)
-      shiny::req(statTable())
-      filterDF <- subset(sfData$filter, select = -ID)
-      names(filterDF) <- paste0("rawArea_", names(filterDF))
-      cleanDF <- subset(sfData$clean, select = -ID)
-      names(cleanDF) <- paste0("processedAREA_", names(cleanDF))
-      combinedDF <- cbind.data.frame(ID = sfData$clean$ID, statTable(), filterDF, cleanDF)
-      ## filter rows based on defined p-value
-      if(isTRUE(as.logical(as.numeric(input$SigFilter)))){
-        combinedDF <- combinedDF %>%
-          dplyr::filter(if_any(contains("Pvalue"), ~ . < input$SigP))
-        }
-      rownames(combinedDF) <- NULL
-      return(combinedDF)
-    }) |>
-      bindEvent(input$viewStat)
+      result <- analysisResult()
+      if(is.null(result)) return(NULL)
+      result$combinedTable
+    })
 
     ##(2) Show statistical result ==============================================
     output$StatResult <- DT::renderDataTable({
@@ -665,11 +698,16 @@ mod_04_viewResult_server <- function(id, sfData){
     ##(2) Prepare plot----------------------------------------------------------
     ### sfData$clean (QC filtered data) is used for PCA
     dataGlobal3PCA <- reactive({
-      shiny::req(sfData$clean)
-      tem <- transformDF(sfData$clean, Group = NULL, rowName = TRUE)
-      return(tem)
-    }) |>
-      bindEvent(input$viewStat)
+      result <- analysisResult()
+      if(is.null(result)) return(NULL)
+      result$pcaData
+    })
+
+    pcaResult <- reactive({
+      result <- analysisResult()
+      if(is.null(result)) return(NULL)
+      result$pcaResult
+    })
 
     PCAPlot <- reactive({
       shiny::req(dataGlobal3PCA())
@@ -681,6 +719,7 @@ mod_04_viewResult_server <- function(id, sfData){
                    iny = as.numeric(input$PCAY),
                    showFrame = input$PCAFrame,
                    palette = input$PCAColor,
+                   pca_result = pcaResult(),
                    interactive = FALSE
                    ) +
         ggplot2::theme(text = element_text(size = 16))
@@ -698,6 +737,7 @@ mod_04_viewResult_server <- function(id, sfData){
         iny = as.numeric(input$PCAY),
         showFrame = input$PCAFrame,
         palette = input$PCAColor,
+        pca_result = pcaResult(),
         interactive = TRUE
       )
     })
@@ -830,12 +870,9 @@ mod_04_viewResult_server <- function(id, sfData){
     ##(2) Prepare plot----------------------------------------------------------
     ### Non-transformed data: sfData$filter and p-values are needed
     heatmapDF <- reactive({
-      shiny::req(combinedTable())
-      tem1 <- combinedTable() %>%
-        dplyr::select(ID, starts_with("rawArea_")) %>%
-        dplyr::rename_with(~ gsub("rawArea_", "", .x, fixed = TRUE))
-      tem2 <- transformDF(tem1, Group = NULL, rowName = TRUE)
-      return(tem2)
+      result <- analysisResult()
+      if(is.null(result)) return(NULL)
+      result$heatmapData
     })
 
     HMPlot <- reactive({

@@ -156,9 +156,20 @@ mod_05_downloadReport_server <- function(id, sfData, inputData, resultList) {
       content = function(file) {
         shiny::withProgress(
           message = "Generating report",
-          detail = "This may take a few minutes.",
-          value = 0.4,
-          render_metabo_report(report_params(), file)
+          min = 0,
+          max = 5,
+          value = 0,
+          {
+            shiny::setProgress(1, detail = "1/5 - Collect analysis results")
+            params <- report_params()
+            render_metabo_report(
+              params,
+              file,
+              progress = function(step, detail) {
+                shiny::setProgress(step, detail = paste0(step, "/5 - ", detail))
+              }
+            )
+          }
         )
       }
     )

@@ -10,7 +10,8 @@ test_that("interactive PCA and volcano plots do not depend on ggplotly", {
   )
   group <- rep(c("Control", "Treatment"), each = 10)
 
-  pca <- MetaboReport:::showPCA(data, group, interactive = TRUE)
+  pca_result <- stats::prcomp(data, center = FALSE, scale. = FALSE)
+  pca <- MetaboReport:::showPCA(data, group, pca_result = pca_result, interactive = TRUE)
   expect_s3_class(pca, "plotly")
   expect_gt(length(plotly::plotly_build(pca)$x$data), 0)
 

@@ -76,15 +76,19 @@ validate_report_params <- function(params) {
 #' @param output_file Exact destination path supplied by Shiny.
 #' @param template_dir Directory containing `Report.Rmd`, `reportCSS/style.css`,
 #'   and `img/logo.png`.
+#' @param progress Optional function called with the current step and description.
 #' @return The normalized output path, invisibly.
 #' @noRd
 render_metabo_report <- function(
   params,
   output_file,
-  template_dir = app_sys("app/www")
+  template_dir = app_sys("app/www"),
+  progress = NULL
 ) {
+  if (!is.null(progress)) progress(2, "Validate report inputs")
   validate_report_params(params)
 
+  if (!is.null(progress)) progress(3, "Prepare report files")
   source_files <- c(
     report = file.path(template_dir, "Report.Rmd"),
     css = file.path(template_dir, "reportCSS", "style.css"),
@@ -105,6 +109,7 @@ render_metabo_report <- function(
     stop("The report resources could not be prepared.")
   }
 
+  if (!is.null(progress)) progress(4, "Render HTML report")
   rendered <- rmarkdown::render(
     input = destination_files[[1L]],
     output_file = "Report.html",
@@ -114,6 +119,7 @@ render_metabo_report <- function(
     quiet = TRUE
   )
 
+  if (!is.null(progress)) progress(5, "Finalize download file")
   if (!file.copy(rendered, output_file, overwrite = TRUE)) {
     stop("The generated report could not be copied to the download destination.")
   }

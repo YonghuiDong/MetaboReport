@@ -8,6 +8,7 @@
 #' @param showFrame what kind of frame should be added? Default is none, options include "none", "norm", and "polygon".
 #' @param palette ColorBrewer palette name, or "Default".
 #' @param interactive should the plot be interactive? default is FALSE.
+#' @param pca_result optional precomputed PCA result.
 #' @importFrom stats prcomp
 #' @importFrom grDevices chull
 #' @importFrom ggplot2 ensym aes
@@ -18,7 +19,7 @@
 #' Group <- iris$Species
 #' showPCA(df, Group, showFrame = "norm", interactive = T)
 
-showPCA <- function(df, Group, inx = 1, iny = 2, showFrame = "none", palette = "Default", interactive = FALSE) {
+showPCA <- function(df, Group, inx = 1, iny = 2, showFrame = "none", palette = "Default", interactive = FALSE, pca_result = NULL) {
 
   #(1) check input
   Group <- as.factor(Group)
@@ -27,7 +28,7 @@ showPCA <- function(df, Group, inx = 1, iny = 2, showFrame = "none", palette = "
   if(length(Group) != nrow(df)){stop("Missing group informaiton detected")}
 
   #(2) perform PCA
-  df_pca <- prcomp(df, center = FALSE, scale. = FALSE)
+  df_pca <- if(is.null(pca_result)) prcomp(df, center = FALSE, scale. = FALSE) else pca_result
   df_pcs <- data.frame(df_pca$x, Group = Group)
   percentage <-round(df_pca$sdev^2 / sum(df_pca$sdev^2) * 100, 2)
   percentage <-paste(colnames(df_pcs),"(", paste(as.character(percentage), "%", ")", sep = ""))
