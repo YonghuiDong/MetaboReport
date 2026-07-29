@@ -73,6 +73,12 @@ golem_add_external_resources <- function() {
         "www/custom.css?v=%s",
         utils::packageVersion("MetaboReport")
       )
+    ),
+    tags$script(
+      src = sprintf(
+        "www/download.js?v=%s",
+        utils::packageVersion("MetaboReport")
+      )
     )
   )
 }

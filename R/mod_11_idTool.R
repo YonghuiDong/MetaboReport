@@ -169,9 +169,10 @@ mod_11_idTool_server <- function(id){
 
       output$idFile <- downloadHandler(
         filename = "Identification.csv",
-        content = function(file) {
-          write.csv(getIdentification(), file, row.names = FALSE)
-        }
+        content = safe_download_content(function(file) {
+          result <- require_download_result(getIdentification())
+          write.csv(result, file, row.names = FALSE)
+        })
       )
 
     })

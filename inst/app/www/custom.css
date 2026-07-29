@@ -66,6 +66,38 @@ body {
   line-height: 1.4;
 }
 
+/* Unavailable download dialog */
+#shiny-modal.in {
+  display: flex !important;
+  align-items: center;
+  justify-content: center;
+}
+
+#shiny-modal .modal-dialog {
+  width: 440px;
+  max-width: calc(100vw - 32px);
+  margin: 0;
+}
+
+#shiny-modal .modal-footer {
+  text-align: center;
+}
+
+.result-not-available-message {
+  padding: 24px 12px;
+  color: #333;
+  font-size: 24px;
+  text-align: center;
+}
+
+.result-not-available-message .fa,
+.result-not-available-message .svg-inline--fa {
+  display: block;
+  margin-bottom: 14px;
+  color: #f39c12;
+  font-size: 40px;
+}
+
 /* Quoted text  */
 blockquote {
   font-family: Arial, "Helvetica Neue", Helvetica, sans-serif;

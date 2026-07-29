@@ -673,9 +673,10 @@ mod_04_viewResult_server <- function(id, sfData){
 
     output$downloadStatTable <- downloadHandler(
       filename = "Stat_table.csv",
-      content = function(file){
-        write.csv(combinedTable(), file, row.names = FALSE)
-      }
+      content = safe_download_content(function(file) {
+        result <- require_download_result(combinedTable())
+        write.csv(result, file, row.names = FALSE)
+      })
     )
 
     #(2) PCA====================================================================
@@ -744,9 +745,10 @@ mod_04_viewResult_server <- function(id, sfData){
 
     output$downloadPCA <- downloadHandler(
       filename = function(){paste("PCA", input$PCAType, sep = ".")},
-      content = function(file){
-        ggplot2::ggsave(file, plot = PCAPlot(), dpi = 600, width = 20, height = 20 / PCARatio(), units = "cm", device = input$PCAType)
-      }
+      content = safe_download_content(function(file) {
+        plot <- require_download_result(PCAPlot())
+        ggplot2::ggsave(file, plot = plot, dpi = 600, width = 20, height = 20 / PCARatio(), units = "cm", device = input$PCAType)
+      })
     )
 
     ##(3) OPLSDA================================================================
@@ -842,9 +844,10 @@ mod_04_viewResult_server <- function(id, sfData){
 
     output$downloadOPLSDA <- downloadHandler(
       filename = function(){paste("OPLSDA_ScorePlot", input$OPLSDAType, sep = ".")},
-      content = function(file){
-        ggplot2::ggsave(file, plot = OPLSDAPlot(), dpi = 600, width = 20, height = 20 / OPLSDARatio(), units = "cm", device = input$OPLSDAType)
-      }
+      content = safe_download_content(function(file) {
+        plot <- require_download_result(OPLSDAPlot())
+        ggplot2::ggsave(file, plot = plot, dpi = 600, width = 20, height = 20 / OPLSDARatio(), units = "cm", device = input$OPLSDAType)
+      })
     )
 
     #(4) Heat Map===============================================================
@@ -915,15 +918,17 @@ mod_04_viewResult_server <- function(id, sfData){
 
     output$downloadHM <- downloadHandler(
       filename = function(){paste("Heatmap", input$HMType, sep = ".")},
-      content = function(file){
+      content = safe_download_content(function(file) {
+        plot <- require_download_result(HMPlot())
         switch(input$HMType,
                "png" = png(file, width = 20, height = 20 / HMRatio(), units = "cm", res = 600),
                "pdf" = pdf(file, width = 20, height = 20 / HMRatio()),
                "tiff" = tiff(file, width = 20, height = 20 / HMRatio(), units = "cm", res = 600)
                )
-        ComplexHeatmap::draw(HMPlot())
-        dev.off()
-    })
+        on.exit(grDevices::dev.off(), add = TRUE)
+        ComplexHeatmap::draw(plot)
+      })
+    )
 
     #(3) Volcano Plot ==========================================================
     ##(1) Volcano plot parameters ----------------------------------------------
@@ -982,9 +987,10 @@ mod_04_viewResult_server <- function(id, sfData){
 
     output$downloadVCPlot <- downloadHandler(
       filename = function(){paste("VolcanoPlot", input$VCType, sep = ".")},
-      content = function(file){
-        ggplot2::ggsave(file, plot = VCPlot(), dpi = 600, width = 20, height = 20 / VCRatio(), units = "cm", device = input$VCType)
-      }
+      content = safe_download_content(function(file) {
+        plot <- require_download_result(VCPlot())
+        ggplot2::ggsave(file, plot = plot, dpi = 600, width = 20, height = 20 / VCRatio(), units = "cm", device = input$VCType)
+      })
     )
 
     #(4) K-Means================================================================
@@ -1065,16 +1071,18 @@ mod_04_viewResult_server <- function(id, sfData){
 
     output$downloadKMTrend <- downloadHandler(
       filename = function(){paste("KM_Lineplot", input$KMType, sep = ".")},
-      content = function(file){
-        ggplot2::ggsave(file, plot = KMTrendPlot(), dpi = 600, width = 20, height = 20 / KMRatio(), units = "cm", device = input$KMType)
-      }
+      content = safe_download_content(function(file) {
+        plot <- require_download_result(KMTrendPlot())
+        ggplot2::ggsave(file, plot = plot, dpi = 600, width = 20, height = 20 / KMRatio(), units = "cm", device = input$KMType)
+      })
     )
 
     output$downloadKMTable <- downloadHandler(
       filename = "K-means_table.csv",
-      content = function(file){
-        write.csv(KMTable(), file, row.names = FALSE)
-      }
+      content = safe_download_content(function(file) {
+        result <- require_download_result(KMTable())
+        write.csv(result, file, row.names = FALSE)
+      })
     )
 
     #(5) Box Plot ==============================================================
@@ -1123,9 +1131,11 @@ mod_04_viewResult_server <- function(id, sfData){
 
     output$downloadBP <- downloadHandler(
       filename = function(){paste("Box_plot", input$BPType, sep = ".")},
-      content = function(file){
-        ggplot2::ggsave(file, plot = BPPlot(), dpi = 600, width = 20, height = 20 / BPRatio(), units = "cm", device = input$BPType)
-    })
+      content = safe_download_content(function(file) {
+        plot <- require_download_result(BPPlot())
+        ggplot2::ggsave(file, plot = plot, dpi = 600, width = 20, height = 20 / BPRatio(), units = "cm", device = input$BPType)
+      })
+    )
 
 
     #(6) Correlation Analysis ==================================================
@@ -1161,9 +1171,10 @@ mod_04_viewResult_server <- function(id, sfData){
       filename = function(){
         paste0("Network_", as.character(input$CAMetabolite), ".html")
       },
-      content = function(file){
-        visNetwork::visSave(graph = CAPlot(), file = file)
-      }
+      content = safe_download_content(function(file) {
+        plot <- require_download_result(CAPlot())
+        visNetwork::visSave(graph = plot, file = file)
+      })
     )
 
     resultList <- list(

@@ -218,6 +218,28 @@ mod_09_msTool_ui <- function(id){
 mod_09_msTool_server <- function(id){
   moduleServer( id, function(input, output, session){
     ns <- session$ns
+    mzValue <- reactiveVal(NULL)
+    idList <- reactiveVal(NULL)
+    getNoiseList <- reactiveVal(NULL)
+
+    output$downloadmz <- downloadHandler(
+      filename = "calculatedMZ.csv",
+      content = safe_download_content(function(file) {
+        write.csv(require_download_result(mzValue()), file, row.names = FALSE)
+      })
+    )
+    output$downloadDBOutput <- downloadHandler(
+      filename = "Identification_HMDB.csv",
+      content = safe_download_content(function(file) {
+        write.csv(require_download_result(idList()), file, row.names = FALSE)
+      })
+    )
+    output$downloadNoiseOutput <- downloadHandler(
+      filename = "noisePeak.csv",
+      content = safe_download_content(function(file) {
+        write.csv(require_download_result(getNoiseList()), file, row.names = FALSE)
+      })
+    )
     ############################################################################
     # Calculate m/z values======================================================
     ############################################################################
@@ -230,9 +252,10 @@ mod_09_msTool_server <- function(id){
       })
     ##(1.2) Update adducts------------------------------------------------------
     adductTypes <- reactive({
-      if(is.null(ionMode1())){
-        return(NULL)
-      } else if((as.numeric(ionMode1()) == -1)){
+      mode <- ionMode1()
+      if(length(mode) != 1L || is.na(mode)){
+        return(character())
+      } else if((as.numeric(mode) == -1)){
         return(c("H", "CH2O2", "CH3COOH"))
       } else{
         return(c("H", "Na", "K", "H30", "NH4"))
@@ -270,24 +293,24 @@ mod_09_msTool_server <- function(id){
         })
 
       ###(1.3) Get result ------------------------------------------------------
-      mzValue <- reactive({
-        shiny::validate(need(formula != "", message = "No molecular formula found."))
+      {
+        shiny::validate(need(length(formula) > 0L && all(!is.na(formula)) && all(nzchar(trimws(formula))), message = "No molecular formula found."))
         shiny::validate(need(nCharge() > 0, message = "Charge state must be positive."))
-        shiny::validate(need(!is.null(ionMode1()), message = "Select an ion mode."))
-        shiny::withProgress(
+        shiny::validate(need(length(ionMode1()) == 1L && !is.na(ionMode1()), message = "Select an ion mode."))
+        result <- shiny::withProgress(
           message = "It takes time to load the database when you use this module for the first time ",
           detail = "Be patient...",
           value = 0.4,
           {
             mode = ifelse(ionMode1() == 1, "positive", "negative")
-            mzValue <- getMZ(formula = formula,
-                             adducts = input$adducts,
-                             z = nCharge() * as.numeric(ionMode1()),
-                             mode = mode
-                             )
+            getMZ(formula = formula,
+                  adducts = input$adducts,
+                  z = nCharge() * as.numeric(ionMode1()),
+                  mode = mode
+                  )
             })
-        return(mzValue)
-        })
+        mzValue(result)
+      }
 
       ###(1.4) Show Result -----------------------------------------------------
       output$mzOutput <- DT::renderDataTable({
@@ -301,13 +324,6 @@ mod_09_msTool_server <- function(id){
                                      )
                       )
         })
-      ###(1.5) Download Result -------------------------------------------------
-      output$downloadmz <- downloadHandler(
-        filename = "calculatedMZ.csv",
-        content = function(file){
-          write.csv(mzValue(), file, row.names = FALSE)
-          }
-        )
       })
 
     ############################################################################
@@ -342,23 +358,22 @@ mod_09_msTool_server <- function(id){
         })
 
       ##(1.4) Get Result -------------------------------------------------------
-      idList <- reactive({
-        shiny::validate(need(mzList != "", message = "No m/z value found."))
+      {
+        shiny::validate(need(length(mzList) > 0L && all(is.finite(mzList)), message = "No valid m/z value found."))
         shiny::validate(need(ppmTolerance() > 0, message = "Mass tolerance must be positive."))
-        shiny::validate(need(!is.null(ionMode2()), message = "Select an ion mode."))
-        shiny::withProgress(
+        shiny::validate(need(length(ionMode2()) == 1L && !is.na(ionMode2()), message = "Select an ion mode."))
+        result <- shiny::withProgress(
           message = "Searching in HMDB database ",
           detail = "Be patient...",
           value = 0.4,
           {
-            idList <- MSbox::what(myMZ = mzList,
-                                  mode = ionMode2(),
-                                  ppm = ppmTolerance(),
-                                  useDB = "HMDB")
+            MSbox::what(myMZ = mzList,
+                        mode = ionMode2(),
+                        ppm = ppmTolerance(),
+                        useDB = "HMDB")
           })
-        if(is.null(idList)){idList = data.frame(Result = "Not Found")}
-        return(idList)
-      })
+        idList(result)
+      }
 
       #(1.5) Show Result -------------------------------------------------------
       output$dbOutput <- DT::renderDataTable({
@@ -373,13 +388,6 @@ mod_09_msTool_server <- function(id){
                       )
         })
 
-      ##(1.6) Download Result-------------------------------------------------
-      output$downloadDBOutput <- downloadHandler(
-        filename = "Identification_HMDB.csv",
-        content = function(file){
-          write.csv(idList(), file, row.names = FALSE)
-          }
-        )
       })
 
 
@@ -416,22 +424,21 @@ mod_09_msTool_server <- function(id){
 
       #(2) Result ==============================================================
       ##(1) Get Result----------------------------------------------------------
-      getNoiseList <- reactive({
-        shiny::validate(need(noiseList != "", message = "No m/z value found."))
+      {
+        shiny::validate(need(length(noiseList) > 0L && all(is.finite(noiseList)), message = "No valid m/z value found."))
         shiny::validate(need(ppmTolerance2() > 0, message = "Mass tolerance must be positive."))
-        shiny::validate(need(!is.null(ionMode3()), message = "Select an ion mode."))
-        shiny::withProgress(
+        shiny::validate(need(length(ionMode3()) == 1L && !is.na(ionMode3()), message = "Select an ion mode."))
+        result <- shiny::withProgress(
           message = "Matching known contaminants",
           detail = "Be patient...",
           value = 0.4,
           {
-            getNoiseList <- MSbox::contam(mz = noiseList,
-                                          mode = ionMode3(),
-                                          ppm = ppmTolerance2())
+            MSbox::contam(mz = noiseList,
+                          mode = ionMode3(),
+                          ppm = ppmTolerance2())
           })
-        if(is.null(getNoiseList)){getNoiseList = data.frame(Result = "Not Found")}
-        return(getNoiseList)
-      })
+        getNoiseList(result)
+      }
 
       ##(1.2) Show Result ------------------------------------------------------
       output$noiseOutput <- DT::renderDataTable({
@@ -445,13 +452,6 @@ mod_09_msTool_server <- function(id){
                                      )
                       )
         })
-      ##(1.3) Download Result-------------------------------------------------
-      output$downloadNoiseOutput <- downloadHandler(
-        filename = "noisePeak.csv",
-        content = function(file){
-          write.csv(getNoiseList(), file, row.names = FALSE)
-          }
-        )
       })
     })
   }

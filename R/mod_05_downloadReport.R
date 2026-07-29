@@ -169,7 +169,15 @@ mod_05_downloadReport_server <- function(id, sfData, inputData, resultList) {
       downloadHandler(
         filename = function() paste0(Sys.Date(), "_Report_", toupper(language), ".html"),
         contentType = "text/html",
-        content = function(file) {
+        content = safe_download_content(function(file) {
+          params <- require_download_result(report_params())
+          required <- report_parameter_names[report_parameter_names != "reportLanguage"]
+          require_download_result(
+            params,
+            available = all(required %in% names(params)) &&
+              !any(vapply(params[required], is.null, logical(1)))
+          )
+          params$reportLanguage <- language
           shiny::withProgress(
             message = if (chinese) "正在生成中文报告" else "Generating English report",
             min = 0,
@@ -177,8 +185,6 @@ mod_05_downloadReport_server <- function(id, sfData, inputData, resultList) {
             value = 0,
             {
               shiny::setProgress(1, detail = paste0("1/5 - ", steps[[1L]]))
-              params <- report_params()
-              params$reportLanguage <- language
               render_metabo_report(
                 params,
                 file,
@@ -188,7 +194,7 @@ mod_05_downloadReport_server <- function(id, sfData, inputData, resultList) {
               )
             }
           )
-        }
+        })
       )
     }
 

@@ -137,36 +137,39 @@ mod_06_repCheck_server <- function(id){
       })
 
     ##(2) Replicates Analysis --------------------------------------------------
-    observeEvent(input$submit, {
+    repData <- eventReactive(input$submit, {
       shiny::req(inputData())
       shiny::validate(need(
-        !is.null(input$selectColumnAll) || !is.null(input$selectColumnAny),
+        length(input$selectColumnAll) > 0L || length(input$selectColumnAny) > 0L,
         message = "Select at least one Type A or Type B column."
       ))
-      repData <- checkReplicates(df = inputData(),
-                                 col_all = input$selectColumnAll,
-                                 col_any = input$selectColumnAny)
+      checkReplicates(
+        df = inputData(),
+        col_all = input$selectColumnAll,
+        col_any = input$selectColumnAny
+      )
+    }, ignoreInit = TRUE)
 
-      ##(3) Show Replicate Table -----------------------------------------------
-      output$repView <- DT::renderDataTable({
-        shiny::validate(need(!is.null(repData), message = "No input data"))
-        DT::datatable(repData,
-                      options = list(scrollX = TRUE,
-                                     deferRender = TRUE,
-                                     scroller = TRUE,
-                                     fixedColumns = FALSE
-                                     )
-                      )
-        })
+    ##(3) Show Replicate Table -------------------------------------------------
+    output$repView <- DT::renderDataTable({
+      result <- repData()
+      shiny::validate(need(!is.null(result), message = "No input data"))
+      DT::datatable(result,
+                    options = list(scrollX = TRUE,
+                                   deferRender = TRUE,
+                                   scroller = TRUE,
+                                   fixedColumns = FALSE
+                                   )
+                    )
+      })
 
-      ##(4) Download Replicate Table -------------------------------------------
-      output$downloadrepCheckTable <- downloadHandler(
-        filename = "replicatesCheck.csv",
-        content = function(file){
-          write.csv(repData, file, row.names = FALSE)
-          }
-        )
-
-    })
+    ##(4) Download Replicate Table ---------------------------------------------
+    output$downloadrepCheckTable <- downloadHandler(
+      filename = "replicatesCheck.csv",
+      content = safe_download_content(function(file) {
+        result <- require_download_result(repData())
+        write.csv(result, file, row.names = FALSE)
+      })
+    )
   })
 }

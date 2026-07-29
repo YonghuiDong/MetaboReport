@@ -63,6 +63,32 @@ test_that("imputation is skipped when data are complete", {
   expect_error(MetaboReport:::fillNA(data, "unknown"), "Unknown missing-value method")
 })
 
+test_that("downloads distinguish usable results from empty placeholders", {
+  expect_false(MetaboReport:::has_download_result(NULL))
+  expect_false(MetaboReport:::has_download_result(data.frame()))
+  expect_false(MetaboReport:::has_download_result("Not Found"))
+  expect_true(MetaboReport:::has_download_result(data.frame(value = 1)))
+})
+
+test_that("download errors are contained inside the Shiny session", {
+  shiny::testServer(function(input, output, session) {}, {
+    content <- MetaboReport:::safe_download_content(function(file) stop("boom"))
+    error <- tryCatch(suppressWarnings(content(tempfile())), error = identity)
+    expect_s3_class(error, "shiny.silent.error")
+  })
+})
+
+test_that("downloads are checked before the browser opens a save dialog", {
+  script <- readLines(
+    MetaboReport:::app_sys("app/www/download.js"),
+    warn = FALSE
+  )
+  script <- paste(script, collapse = "\n")
+
+  expect_match(script, "event.preventDefault()", fixed = TRUE)
+  expect_match(script, "file.size === 0", fixed = TRUE)
+})
+
 test_that("column removal validates its input", {
   data <- data.frame(a = 1, b = 2, c = 3)
   expect_identical(names(MetaboReport:::removecolumn(data, c("b", "c"))), "a")

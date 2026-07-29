@@ -8,6 +8,10 @@ app_server <- function(input, output, session) {
   state <- new_app_state()
   ids <- app_module_ids
 
+  observeEvent(input$download_unavailable, {
+    show_result_not_available()
+  }, ignoreInit = TRUE)
+
   mod_01_home_server(ids[["home"]])
   input_data <- mod_02_uploadData_server(ids[["upload"]], sfData = state)
   mod_03_preprocess_server(ids[["preprocess"]], sfData = state)

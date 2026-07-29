@@ -206,9 +206,10 @@ mod_07_randomizer_server <- function(id) {
 
     output$seqFile <- downloadHandler(
       filename = function() paste0(input$outputType, "_Sequence_", Sys.Date(), ".csv"),
-      content = function(file) {
-        utils::write.csv(sequence_file(), file, row.names = FALSE)
-      }
+      content = safe_download_content(function(file) {
+        result <- require_download_result(sequence_file())
+        utils::write.csv(result, file, row.names = FALSE)
+      })
     )
   })
 }
