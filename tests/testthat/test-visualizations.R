@@ -44,6 +44,7 @@ test_that("interactive PCA and volcano plots do not depend on ggplotly", {
   )
   expect_s3_class(volcano, "plotly")
   volcano_traces <- plotly::plotly_build(volcano)$x$data
+  volcano_shapes <- plotly::plotly_build(volcano)$x$layout$shapes
   volcano_colors <- setNames(
     vapply(volcano_traces, function(x) x$marker$color[[1L]], ""),
     vapply(volcano_traces, `[[`, "", "name")
@@ -52,4 +53,11 @@ test_that("interactive PCA and volcano plots do not depend on ggplotly", {
     unname(volcano_colors[c("Not Significant", "Significantly Up", "Significantly Down")]),
     c("rgba(179,179,179,1)", "rgba(230,75,53,1)", "rgba(77,187,213,1)")
   )
+  expect_equal(c(volcano_shapes[[1L]]$x0, volcano_shapes[[2L]]$x0), c(-1, 1))
+  expect_equal(volcano_shapes[[3L]]$y0, -log10(0.05))
+
+  strict <- plotly::plotly_build(MetaboReport:::showVolcano(
+    statistics, c("Control", "Treatment"), FC = 5, pValue = 0.0001, interactive = TRUE
+  ))$x$data
+  expect_equal(vapply(strict, `[[`, "", "name"), "Not Significant")
 })

@@ -24,7 +24,7 @@ showVolcano <- function(result, compare_group, FC = 2, pValue = 0.05, interactiv
   if(!is.numeric(FC)){stop("invalid calss of fold change: not numeric")}
   if(!is.numeric(pValue)){stop("invalid calss of p value: not numeric")}
   if(pValue > 1){stop("p value should between 0 and 1")}
-  if(FC < 0){stop("FC value cannot be negative value ")}
+  if(FC < 1){stop("FC threshold should be at least 1")}
   ## suppress "no visible binding for global variable" notes in ggplot2
   fold_change <- p_value <- significant <- NULL
 
@@ -56,15 +56,9 @@ showVolcano <- function(result, compare_group, FC = 2, pValue = 0.05, interactiv
 
   ## add color information (significance)
   new_iden$significant = "Not Significant"
-  con1 <- new_iden[(new_iden$fold_change >= log2(FC) & new_iden$p_value >= -log10(pValue)),]
-  if(dim(con1)[1] > 0) {
-    new_iden[(new_iden$fold_change >= log2(FC) & new_iden$p_value >= -log10(pValue)),]$significant = "Significantly Up"
-    }
-
-  con2 <- new_iden[(new_iden$fold_change < -log2(FC) & new_iden$p_value >= -log10(pValue)),]
-  if(dim(con2)[1] > 0) {
-    new_iden[(new_iden$fold_change < -log2(FC) & new_iden$p_value >= -log10(pValue)),]$significant = "Significantly Down"
-    }
+  significant_p <- new_iden$p_value >= -log10(pValue)
+  new_iden$significant[significant_p & new_iden$fold_change >= log2(FC)] <- "Significantly Up"
+  new_iden$significant[significant_p & new_iden$fold_change <= -log2(FC)] <- "Significantly Down"
 
   volcano_colors <- c(
     "Not Significant" = "#B3B3B3",
@@ -85,13 +79,19 @@ showVolcano <- function(result, compare_group, FC = 2, pValue = 0.05, interactiv
     ggplot2::geom_hline(yintercept = -log10(pValue), col = "grey", linetype = "longdash")
   if (isTRUE(interactive)) {
     new_iden$feature <- rownames(result)
+    new_iden$hover <- paste0(
+      new_iden$feature,
+      "<br>Fold change: ", signif(F_iden, 4),
+      "<br>Adjusted p-value: ", signif(P_iden, 4),
+      "<br>", new_iden$significant
+    )
     VP <- plotly::plot_ly(
       data = new_iden,
       x = ~fold_change,
       y = ~p_value,
       color = ~significant,
       colors = volcano_colors,
-      text = ~feature,
+      text = ~hover,
       hoverinfo = "text",
       type = "scatter",
       mode = "markers"
@@ -99,7 +99,12 @@ showVolcano <- function(result, compare_group, FC = 2, pValue = 0.05, interactiv
       plotly::layout(
         title = paste("Volcano plot for sample groups:", compare_group[1], "vs", compare_group[2]),
         xaxis = list(title = "Log2(FC)"),
-        yaxis = list(title = "-Log10(p-Value)")
+        yaxis = list(title = "-Log10(p-Value)"),
+        shapes = list(
+          list(type = "line", x0 = -log2(FC), x1 = -log2(FC), xref = "x", y0 = 0, y1 = 1, yref = "paper", line = list(color = "#777777", dash = "dash")),
+          list(type = "line", x0 = log2(FC), x1 = log2(FC), xref = "x", y0 = 0, y1 = 1, yref = "paper", line = list(color = "#777777", dash = "dash")),
+          list(type = "line", x0 = 0, x1 = 1, xref = "paper", y0 = -log10(pValue), y1 = -log10(pValue), yref = "y", line = list(color = "#777777", dash = "dash"))
+        )
       ) %>%
       plotly::config(toImageButtonOptions = list(format = "svg", filename = "volcanoPlot"))
   }
