@@ -12,12 +12,16 @@
 
 fillNA <- function(df, method = "1") {
   stopifnot("ID" %in% names(df))
+  if (!method %in% c("1", "HM", "KNN", "Mean", "Median")) {
+    stop("Unknown missing-value method: ", method)
+  }
   id <- df$ID
   values <- as.data.frame(df[setdiff(names(df), "ID")], check.names = FALSE)
+  if (!anyNA(values)) return(df)
 
   replace_rowwise <- function(fun) {
     result <- t(apply(values, 1L, function(row) {
-      replacement <- fun(row, na.rm = TRUE)
+      replacement <- if (all(is.na(row))) 0 else fun(row, na.rm = TRUE)
       if (!is.finite(replacement)) replacement <- 0
       replace(row, is.na(row), replacement)
     }))
@@ -30,8 +34,7 @@ fillNA <- function(df, method = "1") {
     "HM" = replace_rowwise(function(row, na.rm) 0.2 * min(row, na.rm = na.rm)),
     "KNN" = kNNMissing(values),
     "Mean" = replace_rowwise(mean),
-    "Median" = replace_rowwise(stats::median),
-    stop("Unknown missing-value method: ", method)
+    "Median" = replace_rowwise(stats::median)
   )
 
   data.frame(ID = id, values, check.names = FALSE)
@@ -44,6 +47,10 @@ fillNA <- function(df, method = "1") {
 #' @noRd
 
 kNNMissing <- function(x) {
+  all_missing <- apply(x, 1L, function(row) all(is.na(row)))
+  x[all_missing, ] <- 0
+  if (!anyNA(x)) return(x)
+
   imputed <- VIM::kNN(t(x), imp_var = FALSE)
   rownames(imputed) <- colnames(x)
   as.data.frame(t(imputed), check.names = FALSE)

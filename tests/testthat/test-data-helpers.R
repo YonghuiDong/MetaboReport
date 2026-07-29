@@ -43,17 +43,24 @@ test_that("Method 2 rejects sample columns without the underscore separator", {
 
 test_that("all imputation methods preserve identifiers and remove missing values", {
   data <- data.frame(
-    ID = c("F1", "F2", "F3"),
-    S1 = c(1, NA, 3),
-    S2 = c(2, 4, NA),
-    S3 = c(NA, 5, 6)
+    ID = c("F1", "F2", "F3", "F4"),
+    S1 = c(1, NA, 3, NA),
+    S2 = c(2, 4, NA, NA),
+    S3 = c(NA, 5, 6, NA)
   )
 
   for (method in c("1", "HM", "Mean", "Median", "KNN")) {
     result <- MetaboReport:::fillNA(data, method)
     expect_identical(result$ID, data$ID)
     expect_false(anyNA(result))
+    expect_true(all(is.finite(as.matrix(result[-1]))))
   }
+})
+
+test_that("imputation is skipped when data are complete", {
+  data <- data.frame(ID = c("F1", "F2"), S1 = c(1, 2), S2 = c(3, 4))
+  expect_identical(MetaboReport:::fillNA(data, "KNN"), data)
+  expect_error(MetaboReport:::fillNA(data, "unknown"), "Unknown missing-value method")
 })
 
 test_that("column removal validates its input", {

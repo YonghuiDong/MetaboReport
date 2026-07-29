@@ -325,23 +325,11 @@ mod_03_preprocess_server <- function(id, sfData){
     ##(1) Fill missing values---------------------------------------------------
     fillMissing <- reactive({
       shiny::req(sfData$data)
-      df1 <- dplyr::select(sfData$data, -ID)
-      if(anyNA(df1)) {
-        df2 <- switch(missingValue(),
-                      "1" = replace(df1, is.na(df1), 1),
-                      "HM" = as.data.frame(t(apply(df1, 1, function(x) replace(x, is.na(x), 0.2 * min(x, na.rm = TRUE))))),
-                      "KNN" = kNNMissing(df1),
-                      "Mean" = as.data.frame(t(apply(df1, 1, function(x) replace(x, is.na(x), mean(x, na.rm = TRUE))))),
-                      "Median" = as.data.frame(t(apply(df1, 1, function(x) replace(x, is.na(x), median(x, na.rm = TRUE)))))
-                      )
-        } else {
-          df2 <- df1
-          }
+      df2 <- fillNA(sfData$data, missingValue())
       ## replace 0 with 1, for log transformation
-      df2[df2 == 0] <- 1
-      ## add ID back
-      df2$ID <- cleanNames(sfData$data$ID)
-      df2 <- df2 %>% dplyr::relocate(ID)
+      sampleColumns <- setdiff(names(df2), "ID")
+      df2[sampleColumns][df2[sampleColumns] == 0] <- 1
+      df2$ID <- cleanNames(df2$ID)
       return(df2)
       })
 
