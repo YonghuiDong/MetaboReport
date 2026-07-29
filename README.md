@@ -1,8 +1,6 @@
 # MetaboReport
 
-MetaboReport is a golem-based Shiny application for metabolomics data
-preprocessing, statistical analysis, visualisation, and self-contained HTML
-reporting.
+Shiny app for metabolomics data preprocessing, statistical analysis, visualisation, and self-contained HTML reporting.
 
 ## Run the app
 
