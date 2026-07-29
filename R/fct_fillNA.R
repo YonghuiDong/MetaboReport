@@ -10,34 +10,41 @@
 #' rownames(df) <- c("M1", "M2")
 #' fillNA(df, method = "KNN")
 
-fillNA <- function(df, method = "1"){
+fillNA <- function(df, method = "1") {
+  stopifnot("ID" %in% names(df))
   id <- df$ID
-  df <- subset(df, select = -ID)
-  df <- switch(method,
-                "1" = replace(df, is.na(df), 1),
-                "HM" = as.data.frame(t(apply(df, 1, function(x) replace(x, is.na(x), 0.2 * min(x, na.rm = TRUE))))),
-                "KNN" = kNNMissing(df),
-                "Mean" = as.data.frame(t(apply(df, 1, function(x) replace(x, is.na(x), mean(x, na.rm = TRUE))))),
-                "Median" = as.data.frame(t(apply(df, 1, function(x) replace(x, is.na(x), median(x, na.rm = TRUE)))))
-                )
-  df$ID <- id
-  data.table::setcolorder(df, neworder = "ID")
-  return(df)
+  values <- as.data.frame(df[setdiff(names(df), "ID")], check.names = FALSE)
+
+  replace_rowwise <- function(fun) {
+    result <- t(apply(values, 1L, function(row) {
+      replacement <- fun(row, na.rm = TRUE)
+      if (!is.finite(replacement)) replacement <- 0
+      replace(row, is.na(row), replacement)
+    }))
+    as.data.frame(result, check.names = FALSE)
+  }
+
+  values <- switch(
+    method,
+    "1" = replace(values, is.na(values), 1),
+    "HM" = replace_rowwise(function(row, na.rm) 0.2 * min(row, na.rm = na.rm)),
+    "KNN" = kNNMissing(values),
+    "Mean" = replace_rowwise(mean),
+    "Median" = replace_rowwise(stats::median),
+    stop("Unknown missing-value method: ", method)
+  )
+
+  data.frame(ID = id, values, check.names = FALSE)
 }
 
 #' @title k-Nearest Neighbor Imputation
-#' @description k-Nearest Neighbor imputation using VIM package
+#' @description K-nearest-neighbour imputation using `VIM`.
 #' @param x data frame, row is feature, column is sample
-#' @importFrom VIM kNN
 #' @return a data frame will filled missing value
-#' @export
 #' @noRd
 
 kNNMissing <- function(x) {
-  df <- VIM::kNN(t(x), imp_var = FALSE)
-  rownames(df) <- colnames(x)
-  df <- t(df)
-  df <- as.data.frame(df)
-  return(df)
+  imputed <- VIM::kNN(t(x), imp_var = FALSE)
+  rownames(imputed) <- colnames(x)
+  as.data.frame(t(imputed), check.names = FALSE)
 }
-

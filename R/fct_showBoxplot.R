@@ -41,7 +41,8 @@ showBoxplot <- function(DF, Transform = "none", Group, Metabolite, colorPalette 
 
   #(2) Choose color palette ----------------------------------------------------
   if(colorPalette == "Default") {
-    p <- p
+    groups <- setdiff(unique(as.character(Group)), "QC")
+    p <- p + ggplot2::scale_fill_manual(values = setNames(nature_palette(length(groups)), groups))
   } else {
     p <- p + scale_fill_brewer(palette = colorPalette)
   }

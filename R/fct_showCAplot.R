@@ -4,7 +4,6 @@
 #' @param Metabolite which metabolite?
 #' @param Threshold the correlation coefficient threshold.
 #' @param LabelSize label size.
-#' @import igraph
 #' @return network Plot.
 #' @noRd
 #' @examples
@@ -26,7 +25,7 @@ showCAplot <- function(PCC, Metabolite, Threshold = 0.9, FullName = TRUE, LabelS
 
   nodes <- data.frame(id = edges$to) %>%
     dplyr::mutate(label = edges$to) %>%
-    dplyr::mutate(color.background = ifelse(edges$correlation > 0, "#e9a3c9", "#a1d76a"))
+    dplyr::mutate(color.background = ifelse(edges$correlation > 0, nature_colors[[1L]], nature_colors[[2L]]))
 
   edges$value <- edges$correlation
 
@@ -37,7 +36,5 @@ showCAplot <- function(PCC, Metabolite, Threshold = 0.9, FullName = TRUE, LabelS
     visNetwork::visInteraction(navigationButtons = TRUE) %>%
     visNetwork::visIgraphLayout(randomSeed = 123)
 }
-
-
 
 

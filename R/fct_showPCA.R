@@ -6,20 +6,19 @@
 #' @param inx PCA X axis, default is 1: PC1.
 #' @param iny PCA Y axis, defult is 2: PC2.
 #' @param showFrame what kind of frame should be added? Default is none, options include "none", "norm", and "polygon".
+#' @param palette ColorBrewer palette name, or "Default".
 #' @param interactive should the plot be interactive? default is FALSE.
 #' @importFrom stats prcomp
 #' @importFrom grDevices chull
 #' @importFrom ggplot2 ensym aes
 #' @importFrom dplyr %>%
-#' @importFrom plotly ggplotly
-#' @export
 #' @noRd
 #' @examples
 #' df <-  iris[1:4]
 #' Group <- iris$Species
 #' showPCA(df, Group, showFrame = "norm", interactive = T)
 
-showPCA <- function(df, Group, inx = 1, iny = 2, showFrame = "none", interactive = FALSE) {
+showPCA <- function(df, Group, inx = 1, iny = 2, showFrame = "none", palette = "Default", interactive = FALSE) {
 
   #(1) check input
   Group <- as.factor(Group)
@@ -70,8 +69,60 @@ showPCA <- function(df, Group, inx = 1, iny = 2, showFrame = "none", interactive
       ggplot2::theme_bw()
   }
 
+  colors <- nature_palette(nlevels(Group))
+  if (palette == "Default") {
+    p1 <- p1 +
+      ggplot2::scale_color_manual(values = colors) +
+      ggplot2::scale_fill_manual(values = colors)
+  } else {
+    p1 <- p1 +
+      ggplot2::scale_color_brewer(palette = palette) +
+      ggplot2::scale_fill_brewer(palette = palette)
+    colors <- ggplot2::scale_color_brewer(palette = palette)$palette(nlevels(Group))
+  }
+
   if(interactive){
-    p1 <- plotly::ggplotly(p1, tooltip = "text") %>%
+    # Build the widget natively. plotly 4.10.x cannot convert ggplot2 4.x
+    # objects with ggplotly() ("subscript out of bounds").
+    plotData <- df_pcs
+    plotData$Sample_Name <- Sample_Name
+    frameData <- if (showFrame == "none") NULL else ggplot2::ggplot_build(p1)$data[[1L]]
+
+    p1 <- plotly::plot_ly()
+    if (!is.null(frameData)) {
+      frameData$Group <- factor(levels(Group)[frameData$group], levels = levels(Group))
+      p1 <- plotly::add_trace(
+        p1,
+        data = frameData,
+        x = ~x,
+        y = ~y,
+        split = ~Group,
+        color = ~Group,
+        colors = colors,
+        type = "scatter",
+        mode = "lines",
+        fill = "toself",
+        opacity = 0.2,
+        hoverinfo = "skip",
+        showlegend = FALSE
+      )
+    }
+
+    p1 <- plotly::add_markers(
+      p1,
+      data = plotData,
+      x = plotData[[x]],
+      y = plotData[[y]],
+      color = ~Group,
+      colors = colors,
+      text = ~Sample_Name,
+      hoverinfo = "text",
+      marker = list(size = 12)
+    ) %>%
+      plotly::layout(
+        xaxis = list(title = percentage[inx]),
+        yaxis = list(title = percentage[iny])
+      ) %>%
       plotly::config(toImageButtonOptions = list(format = "svg", filename = "PCA"))
   }
 

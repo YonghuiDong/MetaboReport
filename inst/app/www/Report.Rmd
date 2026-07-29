@@ -9,7 +9,6 @@ output:
     toc_float: true
     number_sections: true
     css: style.css
-runtime: shiny
 params:
   myRawData: NA
   sampleGroup: NA
@@ -23,10 +22,10 @@ params:
   myHMPlot: NA
   dataGlobal3Transform: NA
   BPGroup: NA
-  BPTransform: NA,
-  KMTrendPlot: NA,
-  KMTable: NA,
-  projectName: NA,
+  BPTransform: NA
+  KMTrendPlot: NA
+  KMTable: NA
+  projectName: NA
   authorName: NA
   showIntro: NA
   showMethods: NA
@@ -41,7 +40,7 @@ editor_options:
 #| message = FALSE
 
 #(1) prepare parameters---------------------------------------------------------
-knitr::opts_chunk$set(echo = TRUE)
+knitr::opts_chunk$set(echo = FALSE)
 library(knitr)
 library(DT)
 library(plotly)
@@ -142,8 +141,7 @@ As long as the QCs cluster tightly, relative to the observed dispersion of biolo
 #| out.width = "100%"
 #(1) show PCA plot--------------------------------------------------------------
 
-plotly::ggplotly(params$myPCAPlot, tooltip = "text") %>%
-  plotly::config(toImageButtonOptions = list(format = "svg", filename = "PCA"))
+params$myPCAPlot
 ```
 
 ### Comprehensive QC Report
@@ -176,8 +174,7 @@ The PCA scores represent the new location of the samples in each principal compo
 #| out.width = "100%"
 #(2) show PCA plot--------------------------------------------------------------
 
-plotly::ggplotly(params$myPCAPlot, tooltip = "text") %>%
-  plotly::config(toImageButtonOptions = list(format = "svg", filename = "PCA"))
+params$myPCAPlot
 ```
 > <span style = "color : #FF8300">**Note:**</span>
 > 
@@ -463,7 +460,6 @@ OPLSDALevel <- data.frame(Group = OPLSDALevel) %>%
   dplyr::filter(Group != "QC")
 n <- levels(as.factor(OPLSDALevel$Group))
 listnames <- combn(n, 2, simplify = FALSE)
-OPLSDAList <- htmltools::tagList()
 
 ## plot
 for (i in seq_along(listnames)){
@@ -473,44 +469,35 @@ for (i in seq_along(listnames)){
   groupOPLSDA <- as.factor(dfOPLSDA$Group)
   
   ## perform OPLSDA
-  resultOPLSDA <- tryCatch({
-    ropls::opls(matrixOPLSDA,
-                groupOPLSDA,
-                log10L = FALSE,
-                scaleC = "none",
-                predI = 1,
-                permI = 20,
-                orthoI = 1, # see bug #25
-                crossvalI = min(length(groupOPLSDA), 7),
-                fig.pdfC = "none",
-                info.txtC = "none"
-                )
-    },
-  # For the following error:
-  # Error: No model was built because the first predictive component was already not significant;
-  # Select a number of predictive components of 1 if you want the algorithm to compute a model despite this.
-  error = function(e){
-    ropls::opls(matrixOPLSDA,
-                groupOPLSDA,
-                log10L = FALSE,
-                scaleC = "none",
-                predI = 1,
-                permI = 20,
-                orthoI = 1,
-                crossvalI = min(length(groupOPLSDA), 7),
-                fig.pdfC = "none",
-                info.txtC = "none"
-                )
-    }
+  resultOPLSDA <- tryCatch(
+    ropls::opls(
+      matrixOPLSDA,
+      groupOPLSDA,
+      log10L = FALSE,
+      scaleC = "none",
+      predI = 1,
+      permI = 20,
+      orthoI = 1,
+      crossvalI = min(length(groupOPLSDA), 7),
+      fig.pdfC = "none",
+      info.txtC = "none"
+    ),
+    error = function(error) NULL
   )
 
-  p1 <- showOPLSDA(resultOPLSDA, Group = groupOPLSDA, size = 1, interactive = TRUE)
-  p2 <- showSplot(matrixOPLSDA, resultOPLSDA, size = 1, interactive = TRUE)
-  OPLSDAList[[i]] <- plotly::subplot(p1, p2, nrows = 1, margin = 0.05, which_layout = 1) %>% 
-    plotly::config(toImageButtonOptions = list(format = "svg", filename = "PLSDA"))
-}
+  if (is.null(resultOPLSDA)) {
+    cat("No significant OPLS-DA model was available for ",
+        paste(listnames[[i]], collapse = " versus "), ".\n\n", sep = "")
+    next
+  }
 
-OPLSDAList
+  # Keep these as ggplot objects. plotly 4.10.x cannot convert ggplot2 4.x
+  # objects and aborts the entire report with "subscript out of bounds".
+  p1 <- showOPLSDA(resultOPLSDA, Group = groupOPLSDA, size = 1, interactive = FALSE)
+  p2 <- showSplot(matrixOPLSDA, resultOPLSDA, size = 1, interactive = FALSE)
+  print(p1)
+  print(p2)
+}
 ```
 
 ### Volcano Plot
@@ -528,13 +515,16 @@ VCGroupLevel <- data.frame(Group = VCGroupLevel) %>%
   dplyr::filter(Group != "QC")
 n <- levels(as.factor(VCGroupLevel$Group))
 listnames <- combn(n, 2, simplify = FALSE)
-volcanoList <- htmltools::tagList()
 for (i in seq_along(listnames)){
-    volcanoList[[i]] <- plotly::as_widget(showVolcano(result = statTable, compare_group = listnames[[i]], FC = 2, pValue = 0.05)) %>% 
-    plotly::config(toImageButtonOptions = list(format = "svg", filename = "volcanoPlot"))
+  volcanoPlot <- showVolcano(
+    result = statTable,
+    compare_group = listnames[[i]],
+    FC = 2,
+    pValue = 0.05,
+    interactive = FALSE
+  )
+  print(volcanoPlot)
 }
-
-volcanoList
 ```
 
 ### K-Means Cluster Analysis
@@ -613,6 +603,7 @@ BPData <- dataGlobal3Transform %>%
 ## must order data by the colored variable here to avoid mismatch of standard deviation.
 ## See issue 15
 BPData <- BPData[order(BPData$Group), ]
+BPColors <- nature_palette(length(unique(BPData$Group)))
 BPData <- crosstalk::SharedData$new(BPData)
 metaboliteFilter <- crosstalk::filter_select(id = "Metabolite",
                                              label = "Select a metabolite",
@@ -630,6 +621,7 @@ BPPlot <- plotly::plot_ly(data = BPData,
                           x = ~ Group,
                           y = ~ MEAN,
                           color = ~ Group,
+                          colors = BPColors,
                           marker = list(line = list(color = 'grey', width = 1.5)),
                           error_y = ~list(array = SD, color = 'grey'),
                           type = 'bar'

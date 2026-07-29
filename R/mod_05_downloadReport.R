@@ -136,82 +136,52 @@ mod_05_downloadReport_ui <- function(id){
 #' 05_downloadReport Server Functions
 #'
 #' @noRd
-mod_05_downloadReport_server <- function(id, sfData = global, inputData, resultList){
-  ns <- NS(id)
-  moduleServer( id, function(input, output, session){
-    ns <- session$ns
-    ##(1) Prepare Input File ---------------------------------------------------
-    projectName <- reactive({
-      input$projectName
-    })
-    authorName <- reactive({
-      input$authorName
-    })
-    slectedSamplePrep <- reactive({
-      inFile <- input$samplePrep
-      return(getSamplePrep(inFile))
+mod_05_downloadReport_server <- function(id, sfData, inputData, resultList) {
+  moduleServer(id, function(input, output, session) {
+    report_params <- reactive({
+      list(
+        myRawData = inputData(),
+        sampleGroup = sfData$group,
+        dataGlobal3PCA = resultList$dataGlobal3PCA(),
+        OPLSDAGroup = resultList$OPLSDAGroup(),
+        statTable = resultList$statTable(),
+        VCGroup = resultList$VCGroup(),
+        myStat = resultList$combinedTable(),
+        myPCAPlot = resultList$PCAPlot(),
+        myHMPlot = resultList$HMPlot(),
+        dataGlobal3Transform = resultList$dataGlobal3Transform(),
+        BPGroup = resultList$BPGroup(),
+        BPTransform = resultList$BPTransform(),
+        KMTrendPlot = resultList$KMTrendPlot(),
+        KMTable = resultList$KMTable(),
+        projectName = input$projectName,
+        authorName = input$authorName,
+        showIntro = input$showIntro,
+        showMethods = input$showMethods,
+        mySamplePrep = getSamplePrep(input$samplePrep)
+      )
     })
 
-    ##(2) Prepare Report -------------------------------------------------------
-    output$report_button <- ({NULL})
-    observeEvent(input$getReport, {
-      output$report_button <- renderUI({
-        downloadButton(outputId = ns("report"),
-                       label = "Download Report",
-                       style= "color: #fff; background-color: #7570b3; border-color: #7570b3"
-                       )
-        })
-      })
+    output$report_button <- renderUI({
+      req(input$getReport > 0)
+      downloadButton(
+        outputId = session$ns("report"),
+        label = "Download Report",
+        style = "color:#fff;background-color:#7570b3;border-color:#7570b3"
+      )
+    })
 
-    ##(3) Generate and Download Report -----------------------------------------
     output$report <- downloadHandler(
-      filename <- paste0(Sys.Date(), "_Report.html"),
-      content <- function(file){
+      filename = function() paste0(Sys.Date(), "_Report.html"),
+      contentType = "text/html",
+      content = function(file) {
         shiny::withProgress(
-          message = "Generating report, it will take few minutes",
-          detail = "Be patient...",
+          message = "Generating report",
+          detail = "This may take a few minutes.",
           value = 0.4,
-          {
-            tempReport <- file.path(tempdir(), "Report.Rmd")
-            tempCSS <- file.path(tempdir(), "style.css")
-            tempLogo <- file.path(tempdir(), "logo.png")
-            file.copy(app_sys("app/www/Report.Rmd"), tempReport, overwrite = TRUE)
-            file.copy(app_sys("app/www/reportCSS/style.css"), tempCSS)
-            file.copy(app_sys("app/www/img/logo.png"), tempLogo)
-            params <- list(
-              myRawData = inputData(), # raw data
-              sampleGroup = sfData$group, # complete sample meta group
-              dataGlobal3PCA = resultList$dataGlobal3PCA(), # data for PLSDA
-              OPLSDAGroup = resultList$OPLSDAGroup(), # group information for PLSDA plot
-              statTable = resultList$statTable(), # data for volcano plot
-              VCGroup = resultList$VCGroup(), # group information for volcano plot
-              myStat = resultList$combinedTable(),
-              myPCAPlot = resultList$PCAPlot(),
-              myHMPlot = resultList$HMPlot(),
-              dataGlobal3Transform= resultList$dataGlobal3Transform(), # data for boxplot
-              BPGroup = resultList$BPGroup(), # group information for boxplot
-              BPTransform = resultList$BPTransform(), # data transformation for boxplot
-              KMTrendPlot = resultList$KMTrendPlot(),
-              KMTable = resultList$KMTable(),
-              projectName = projectName(),
-              authorName = authorName(),
-              showIntro = input$showIntro,
-              showMethods = input$showMethods,
-              mySamplePrep = slectedSamplePrep()
-              )
-            rmarkdown::render(input = tempReport,
-                              output_file = file,
-                              params = params,
-                              envir = new.env(parent = globalenv())
-                              )
-            })
-        }
+          render_metabo_report(report_params(), file)
+        )
+      }
     )
   })
 }
-
-## To be copied in the UI
-# mod_05_downloadReport_ui("05_downloadReport_1")
-
-## To be copied in the server
-# mod_05_downloadReport_server("05_downloadReport_1")

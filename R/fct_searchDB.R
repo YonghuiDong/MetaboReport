@@ -7,7 +7,6 @@
 #' @param RT retention time tolerance, default 0.2min
 #' @param useRT should RT be considered during database search?
 #' @importFrom utils setTxtProgressBar txtProgressBar
-#' @export
 #' @noRd
 #' @examples
 #' DF <- cbind.data.frame(mz = c(100.001, 100.1), RT = c(10, 11))
@@ -66,4 +65,3 @@ searchDB <- function(DF, DB, ppm = 5, RT = 0.2, useRT = FALSE){
   myResult <- do.call(rbind.data.frame, Result)
   return(myResult)
 }
-

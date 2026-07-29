@@ -1,6 +1,6 @@
 default:
   golem_name: MetaboReport
-  golem_version: 0.2.1.9000
+  golem_version: 0.3.2.9000
   app_prod: no
 production:
   app_prod: yes

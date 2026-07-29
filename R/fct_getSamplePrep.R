@@ -1,9 +1,7 @@
 #' @title Get sample preparation method
 #' @description Get sample preparation method.
 #' @param Method sample preparation method
-#' @export
 #' @noRd
-#' @export
 #' @example
 #' myMethod <- getSamplePrep(Method = "None")
 

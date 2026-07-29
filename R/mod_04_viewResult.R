@@ -7,7 +7,6 @@
 #' @noRd
 #'
 #' @importFrom dplyr n
-#' @rawNamespace import(shiny, except=c(dataTableOutput, renderDataTable))
 #'
 mod_04_viewResult_ui <- function(id){
   ns <- NS(id)
@@ -146,7 +145,7 @@ mod_04_viewResult_ui <- function(id){
                           column(width = 6,
                                  selectInput(inputId = ns("PCAColor"),
                                              label = "Color palette?",
-                                             choices = list("Default", "Accent", "Dark2", "Paired", "Pastel2", "Pastel1", "Set1", "Set2", "Set3"),
+                                             choices = plot_palette_choices,
                                              selected = "Default"
                                              )
                                  ),
@@ -202,7 +201,7 @@ mod_04_viewResult_ui <- function(id){
                           column(width = 6,
                                  selectInput(inputId = ns("OPLSDAColor"),
                                              label = "Color palette?",
-                                             choices = list("Default", "Accent", "Dark2", "Paired", "Pastel2", "Pastel1", "Set1", "Set2", "Set3"),
+                                             choices = plot_palette_choices,
                                              selected = "Default"
                                              )
                                  ),
@@ -474,7 +473,7 @@ mod_04_viewResult_ui <- function(id){
                         column(width = 6,
                                selectInput(inputId = ns("BPPlotColor"),
                                            label = "Color palette?",
-                                           choices = list("Default", "Accent", "Dark2", "Paired", "Pastel2", "Pastel1", "Set1", "Set2", "Set3"),
+                                           choices = plot_palette_choices,
                                            selected = "Default"
                                            )
                                ),
@@ -534,7 +533,7 @@ mod_04_viewResult_ui <- function(id){
                         ),
                br(),
                p(style = "color:#C70039;", shiny::icon("bell"), strong("Note: ")),
-               p(style = "color:#C70039;", "Red indicates positively correlated, and greed indicates negatively correlated."),
+               p(style = "color:#C70039;", "Red indicates positive correlation, and blue indicates negative correlation."),
                shinycssloaders::withSpinner(visNetwork::visNetworkOutput(ns("CAPlot"), height = "800px"), type = 5)
                )
              )
@@ -677,17 +676,10 @@ mod_04_viewResult_server <- function(id, sfData){
                    inx = as.numeric(input$PCAX),
                    iny = as.numeric(input$PCAY),
                    showFrame = input$PCAFrame,
+                   palette = input$PCAColor,
                    interactive = FALSE
                    ) +
         ggplot2::theme(text = element_text(size = 16))
-
-      if(input$PCAColor == "Default") {
-        p <- p
-        } else {
-          p <- p +
-            scale_color_brewer(palette = input$PCAColor) +
-            scale_fill_brewer(palette = input$PCAColor)
-        }
       return(p)
     })
 
@@ -695,7 +687,15 @@ mod_04_viewResult_server <- function(id, sfData){
     output$PCAPlot <- plotly::renderPlotly({
       shiny::validate(need(!is.null(sfData$clean), message = "Input data not found."))
       shiny::validate(need(!is.null(sfData$group), message = "Meta data not found."))
-      plotly::ggplotly(PCAPlot(), tooltip = "text")
+      showPCA(
+        dataGlobal3PCA(),
+        Group = sfData$group[, PCAGroup()],
+        inx = as.numeric(input$PCAX),
+        iny = as.numeric(input$PCAY),
+        showFrame = input$PCAFrame,
+        palette = input$PCAColor,
+        interactive = TRUE
+      )
     })
 
     output$downloadPCA <- downloadHandler(
@@ -793,10 +793,7 @@ mod_04_viewResult_server <- function(id, sfData){
       shiny::validate(need(input$OPLSDALevel1 != input$OPLSDALevel2, message = "Please select two different groups"))
       shiny::req(nrow(dataGlobal3PCA()) == nrow(sfData$group))
       shiny::req(SPlot())
-      SPlot2 <- SPlot() +
-        ggplot2::geom_point(size = 1) +
-        ggplot2::theme(text = element_text(size = 12))
-      plotly::ggplotly(SPlot2, tooltip = "text")
+      showSplot(OPLSDA$feature, resultOPLSDA(), size = 6, interactive = TRUE)
     })
 
     output$downloadOPLSDA <- downloadHandler(
@@ -849,9 +846,12 @@ mod_04_viewResult_server <- function(id, sfData){
       }
       annoRow <- dplyr::select(HMData, Group)
       rownames(annoRow) <- rownames(HMData)
+      group_levels <- unique(as.character(HMData$Group))
       set.seed(1998)
       ComplexHeatmap::pheatmap(scale(dplyr::select(HMData, -Group), center = T, scale = T),
                                name = "ColorBar",
+                               color = grDevices::colorRampPalette(c(nature_colors[[4L]], "white", nature_colors[[1L]]))(100),
+                               annotation_colors = list(Group = setNames(nature_palette(length(group_levels)), group_levels)),
                                cluster_cols = as.logical(as.numeric(input$HMColCluster)),
                                cluster_rows = as.logical(as.numeric(input$HMRowCluster)),
                                annotation_row = annoRow,
@@ -930,7 +930,13 @@ mod_04_viewResult_server <- function(id, sfData){
         need(input$VCFC > 0, message = "Fold change should be positive value."),
         need(nrow(dataGlobal3PCA()) == nrow(sfData$group), message = "Please click Start button to reperform statistics after deleting or recovering samples.")
       )
-      plotly::ggplotly(VCPlot(), tooltip = c("text"))
+      showVolcano(
+        result = statTable(),
+        FC = input$VCFC,
+        pValue = input$VCPvalue,
+        compare_group = c(input$VCLevel1, input$VCLevel2),
+        interactive = TRUE
+      )
     })
 
     output$downloadVCPlot <- downloadHandler(
@@ -1136,9 +1142,3 @@ mod_04_viewResult_server <- function(id, sfData){
     return(resultList)
   })
 }
-
-## To be copied in the UI
-# mod_04_viewResult_ui("04_viewResult_1")
-
-## To be copied in the server
-# mod_04_viewResult_server("04_viewResult_1")

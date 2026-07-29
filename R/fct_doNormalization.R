@@ -9,7 +9,6 @@
 #' @return normalized dataframe
 #' @importFrom stats median
 #' @importFrom dplyr slice summarise across everything
-#' @export
 #' @noRd
 #' @examples
 #' dat <- data.frame(S1 = c(1, 3, 4), S2 = c(1, 10, 3), S3 = c(2, 10, 20))

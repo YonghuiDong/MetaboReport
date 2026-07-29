@@ -1,135 +1,57 @@
-#' #' @title Change raw data format
-#' #' @description Change raw data format for subsequent data analysis according to user selected format types. Only Unique ID and Peak Area information are kept.
-#' #' @param DF raw data
-#' #' @param metaGroup meta group information
-#' #' @param format data format, Compound Discoverer and other.
-#' #' @importFrom dplyr mutate select rename_with starts_with %>%
-#' #' @return The return value, if any, from executing the function.
-#' #' @noRd
-#' #' @examples
-#' #' ## Method 1: peak area and metadata are in the same table
-#' #' df1 <- data.frame(
-#' #' Name = c("x", "y", "z"),
-#' #' `Area: Sample_WT_M_1` = 1:3,
-#' #' `Area: Sample_WT_M_2` = 1:3,
-#' #' `Area: Sample_WT_M_3` = 1:3,
-#' #' `Area: Sample_MU_F_4` = 1:3,
-#' #' `Area: Sample_MU_F_5` = 1:3,
-#' #' `Area: Sample_MU_F_6` = 1:3,
-#' #'  check.names = FALSE
-#' #' )
-#' #' df1_format <- formatData(df1)
-#' #'
-#' #' ## Method2: feature table and metadata table are separated
-#' #' df2 <- data.frame(
-#' #' `Sample1` = 1:3,
-#' #' `Sample2` = 1:3,
-#' #' `Sample3` = 1:3,
-#' #' `Sample4` = 1:3,
-#' #' `Sample5` = 1:3,
-#' #' `Sample6` = 1:3,
-#' #' check.names = FALSE
-#' #' )
-#' #' metaGroup <- data.frame(
-#' #' Sample = c("Sample1", "Sample2", "Sample3", "Sample4", "Sample5", "Sample6"),
-#' #' A = c("P", "P", "P", "S", "S", "S"),
-#' #' B = c("M", "M", "M", "F", "F", "F")
-#' #' )
-#' #' df2_format <- formatData(df2, metaGroup = metaGroup, format = "Other")
+#' Format a metabolomics feature table
 #'
-#' formatData1 <- function(DF, metaGroup = NULL, format = "CD"){
-#'   ## CD processed files include "Area: ", which is a key word for peak area
-#'   if (!("Name" %in% colnames(DF))){DF["Name"] <- "Unknown"} # add a Name column
-#'   processedData <- switch(format,
-#'                           "CD" = DF %>%
-#'                             dplyr::mutate(ID = paste0("ID", row.names(.), "_", Name)) %>%
-#'                             dplyr::select(ID, starts_with("Area:")) %>%
-#'                             dplyr::rename_with(~ gsub("Area: ", "", .x, fixed = TRUE)) %>%
-#'                             dplyr::rename_with(~ gsub("Sample_", "", .x, fixed = TRUE)) %>%
-#'                             dplyr::rename_with(~ gsub(".raw.*", "", .x)),
-#'                           "Other" = DF %>%
-#'                             dplyr::mutate(ID = paste0("ID", row.names(.), "_", Name)) %>%
-#'                             dplyr::select(ID, starts_with("Sample")) %>%
-#'                             dplyr::rename_with(~ gsub("Sample_", "", .x, fixed = TRUE))
-#'                           )
-#'   if(!is.null(metaGroup)){
-#'     metaGroup <- metaGroup[, -1, drop = FALSE]
-#'     dfName <- do.call(paste, c(metaGroup, sep = '_'))
-#'     dfName <- paste0(dfName, "_", 1:length(dfName))
-#'     if(length(dfName) != (dim(processedData)[2] - 1)) {stop("Sample number and meta number are not equal")}
-#'     colnames(processedData) <- c("ID", dfName)
-#'   }
-#'   return(processedData)
-#' }
-
-
-#' @title Change raw data format
-#' @description Change raw data format for subsequent data analysis according to user selected format types.
-#' Only Unique ID and Peak Area information are kept.
-#' @param DF raw data
-#' @param metaGroup meta group information
-#' @param format data format, Compound Discoverer and other.
-#' @importFrom dplyr %>%
-#' @importFrom data.table as.data.table
-#' @return The return value, if any, from executing the function.
+#' Converts supported input tables to the internal feature-by-sample format.
+#'
+#' @param DF Raw feature table.
+#' @param metaGroup Optional metadata table. Its first column contains sample
+#'   identifiers and the remaining columns define sample groups.
+#' @param format Either `"CD"` for Compound Discoverer output or `"Other"`.
+#'
+#' @return A data frame whose first column is `ID` and remaining columns are
+#'   sample intensities.
 #' @noRd
-#' @examples
-#' ## Method 1: peak area and metadata are in the same table
-#' library(dplyr)
-#' library(data.table)
-#' load("data/cancerCell.rda")
-#' feature <- formatData(cancerCell)
-#'
-#' ## Method2: feature table and metadata table are separated
-#' df2 <- data.frame(
-#' Sample_1 = 1:3,
-#' Sample_2 = 1:3,
-#' Sample_3 = 1:3,
-#' Sample_4 = 1:3,
-#' Sample_5 = 1:3,
-#' Sample_6 = 1:3,
-#' check.names = FALSE
-#' )
-#' metaGroup <- data.frame(
-#' Sample = c("Sample1", "Sample2", "Sample3", "Sample4", "Sample5", "Sample6"),
-#' A = c("P", "P", "P", "S", "S", "S"),
-#' B = c("M", "M", "M", "F", "F", "F")
-#' )
-#' df2_format <- formatData(df2, metaGroup = metaGroup, format = "Other")
+formatData <- function(DF, metaGroup = NULL, format = c("CD", "Other")) {
+  format <- match.arg(format)
+  data <- as.data.frame(DF, check.names = FALSE)
 
-
-formatData <- function(DF, metaGroup = NULL, format = "CD"){
-  #(1) Change DF to datatable --------------------------------------------------
-  DF <- data.table::as.data.table(DF)
-  if (!("Name" %in% colnames(DF))) {DF[, Name := "Unknown"]}
-
-  #(2) Format feature data -----------------------------------------------------
-  ## CD processed files include "Area: "; Other processed files include "Sample", which is a key word for identifying peak area columns.
-  processedData <- switch(format,
-                          "CD" = DF %>%
-                            .[, ID := paste0("ID", seq_len(.N), "_", Name)] %>%
-                            data.table::setcolorder(., neworder = "ID") %>%
-                            .[, c("ID", grep("Area:", names(.), value = TRUE)), with = FALSE] %>%
-                            data.table::setnames(old = names(.), new = sub("Area: ", "", names(.), ignore.case = TRUE)) %>%
-                            data.table::setnames(old = names(.), new = sub("Sample_", "", names(.), ignore.case = TRUE)) %>%
-                            data.table::setnames(old = names(.), new = sub(".raw.*", "", names(.), ignore.case = TRUE)),
-                          "Other" = DF %>%
-                            .[, ID := paste0("ID", seq_len(.N), "_", Name)] %>%
-                            data.table::setcolorder(., neworder = "ID") %>%
-                            .[, c("ID", grep("Sample_", names(.), value = TRUE)), with = FALSE] %>%
-                            data.table::setnames(old = names(.), new = sub("Sample_", "", names(.), ignore.case = TRUE))
-                          )
-
-  #(3) Extract meta data -------------------------------------------------------
-  if(!is.null(metaGroup)){
-    metaGroup <- data.table::setDT(metaGroup) %>%
-      .[, 1 := NULL]
-    dfName <- do.call(paste, c(metaGroup, sep = '_'))
-    dfName <- paste0(dfName, "_", 1:length(dfName))
-    if (length(dfName) != (ncol(processedData) - 1)) {stop("Sample number and meta number are not equal")}
-    data.table::setnames(processedData, c("ID", dfName))
+  if (!"Name" %in% names(data)) {
+    data$Name <- "Unknown"
   }
-  return(processedData)
+
+  prefix <- if (identical(format, "CD")) "Area:" else "Sample_"
+  sample_columns <- grep(prefix, names(data), value = TRUE, fixed = TRUE)
+  if (!length(sample_columns)) {
+    stop("No sample intensity columns were found for format '", format, "'.")
+  }
+
+  result <- data.frame(
+    ID = paste0("ID", seq_len(nrow(data)), "_", data$Name),
+    data[sample_columns],
+    check.names = FALSE
+  )
+
+  sample_names <- sample_columns
+  if (identical(format, "CD")) {
+    sample_names <- sub("Area: ", "", sample_names, fixed = TRUE)
+    sample_names <- sub("Sample_", "", sample_names, fixed = TRUE)
+    sample_names <- sub(".raw.*", "", sample_names)
+  } else {
+    sample_names <- sub("Sample_", "", sample_names, fixed = TRUE)
+  }
+  names(result) <- c("ID", sample_names)
+
+  if (!is.null(metaGroup)) {
+    metadata <- as.data.frame(metaGroup, check.names = FALSE)
+    if (ncol(metadata) < 2L) {
+      stop("Metadata must contain a sample column and at least one group column.")
+    }
+    group_names <- do.call(paste, c(metadata[-1L], sep = "_"))
+    group_names <- paste0(group_names, "_", seq_along(group_names))
+    if (length(group_names) != length(sample_columns)) {
+      stop("Sample number and metadata row count are not equal.")
+    }
+    names(result) <- c("ID", group_names)
+  }
+
+  result
 }
-
-

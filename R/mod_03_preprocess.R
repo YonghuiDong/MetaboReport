@@ -7,7 +7,6 @@
 #'
 #' @noRd
 #'
-#' @rawNamespace import(shiny, except=c(dataTableOutput, renderDataTable))
 #' @importFrom plotly plotlyOutput
 
 mod_03_preprocess_ui <- function(id){
@@ -476,7 +475,7 @@ mod_03_preprocess_server <- function(id, sfData){
     featureDensityPlot <- reactive({
       p <- ggplot2::ggplot(combinedData(), aes(x = Area, y = after_stat(scaled), fill = Treatment)) +
         ggplot2::geom_density(alpha = 0.8) +
-        ggplot2::scale_fill_manual(values = c("#e9a3c9", "#a1d76a"), guide = 'none') +
+        ggplot2::scale_fill_manual(values = treatment_colors, guide = 'none') +
         ggplot2::facet_wrap(~ Treatment, scales = "free") +
         ggplot2::xlab("") +
         ggplot2::ylab("Density") +
@@ -489,7 +488,7 @@ mod_03_preprocess_server <- function(id, sfData){
     featureBoxPlot <- reactive({
       p <- ggplot2::ggplot(combinedData(), aes(x = ID, y = Area)) +
         ggplot2::geom_boxplot(aes(fill = Treatment), alpha = 0.8) +
-        ggplot2::scale_fill_manual(values = c("#e9a3c9", "#a1d76a"), guide = 'none') +
+        ggplot2::scale_fill_manual(values = treatment_colors, guide = 'none') +
         ggplot2::geom_jitter(position = position_jitter(0.2), alpha = 0.3) +
         ggplot2::facet_wrap(~ Treatment, scales = "free") +
         ggplot2::xlab("Metabolite ID") +
@@ -513,9 +512,3 @@ mod_03_preprocess_server <- function(id, sfData){
 
   })
 }
-
-## To be copied in the UI
-# mod_03_preprocess_ui("03_preprocess_1")
-
-## To be copied in the server
-# mod_03_preprocess_server("03_preprocess_1")

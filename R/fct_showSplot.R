@@ -9,9 +9,7 @@
 #' @importFrom ropls getVipVn
 #' @importFrom ggplot2 aes
 #' @importFrom dplyr %>%
-#' @importFrom plotly ggplotly
 #' @noRd
-#' @export
 #' @examples
 #' library(ropls)
 #' data(sacurine)
@@ -45,18 +43,37 @@ showSplot <- function(DF, oplsda, size = 3, interactive = FALSE) {
   df2 <- cbind.data.frame(datasplot, VIP = VIP)
   df3 <- df2 %>%
     dplyr::mutate(VIP = ifelse(VIP >= 1, "VIP >= 1", "VIP < 1"))
+  vip_colors <- c("VIP < 1" = "#B3B3B3", "VIP >= 1" = nature_colors[[1L]])
+  df3$VIP <- factor(df3$VIP, levels = names(vip_colors))
 
   p <- ggplot2::ggplot(df3, aes(x = Cov, y = Corr, color = VIP, text = colnames(DF))) +
     ggplot2::geom_point(size = size) +
     ggplot2::geom_hline(yintercept = 0,linetype = 2) +
     ggplot2::geom_vline(xintercept = 0,linetype = 2) +
-    ggplot2::scale_color_manual(values = c("#a1d76a","#e9a3c9")) +
+    ggplot2::scale_color_manual(values = vip_colors) +
     ggplot2::xlab("Covariance") +
     ggplot2::ylab("Correlation") +
     ggplot2::ggtitle("S-plot") +
     ggplot2::theme_bw()
   if(isTRUE(interactive)){
-    p <- plotly::ggplotly(p)
+    df3$feature <- rownames(df3)
+    p <- plotly::plot_ly(
+      data = df3,
+      x = ~Cov,
+      y = ~Corr,
+      color = ~VIP,
+      colors = vip_colors,
+      text = ~feature,
+      hoverinfo = "text",
+      type = "scatter",
+      mode = "markers",
+      marker = list(size = size)
+    ) %>%
+      plotly::layout(
+        title = "S-plot",
+        xaxis = list(title = "Covariance"),
+        yaxis = list(title = "Correlation")
+      )
     }
   return(p)
 }

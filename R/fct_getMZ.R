@@ -6,7 +6,6 @@
 #' @param mode positive or negative
 #' @importFrom MSbox mz mass
 #' @return a dataframe, containing calculated mz values in each column
-#' @export
 #' @noRd
 #' @examples
 #' formula = c("C7H6O4", "CH4")
@@ -52,4 +51,3 @@ getMZ <- function(formula = NULL, adducts = NULL, z = NULL, mode = "positive"){
   #(5) output result
   return(data.frame(Formula = formula, tem, check.names = FALSE))
   }
-

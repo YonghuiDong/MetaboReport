@@ -22,6 +22,7 @@ showKM <- function(KMTable){
     ggplot2::ggplot(aes(x =  Group , y = normArea , group = row_num)) +
     ggplot2::geom_point(alpha = 0.1) +
     ggplot2::geom_line(alpha = 0.5 , aes(col = as.character(clust))) +
+    ggplot2::scale_color_manual(values = nature_palette(length(unique(KMTable$clust)))) +
     ggplot2::theme_bw() +
     ggplot2::theme(text = element_text(size = 14),
                    legend.position = "none",

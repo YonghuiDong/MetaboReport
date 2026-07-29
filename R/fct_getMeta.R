@@ -2,15 +2,7 @@
 #' @description Get metadata from processed data.
 #' @param DF the processed data frame resulted from formatData function.
 #' @return a data frame, which contains meta data information
-#' @export
 #' @noRd
-#' @examples
-#' library(magrittr)
-#' library(data.table)
-#' load("data/cancerCell.rda")
-#' feature <- formatData(cancerCell)
-#' meta <- getMeta(feature)
-
 getMeta <- function(DF) {
   rowNameDF <- colnames(DF)
   rowNameDF <- rowNameDF[!rowNameDF %in% "ID"]

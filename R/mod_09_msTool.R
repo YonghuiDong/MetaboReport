@@ -257,16 +257,7 @@ mod_09_msTool_server <- function(id){
         return(input$formula1)
         })
       formula2 <- reactive({
-        inFile <- input$formula2
-        if(is.null(inFile)){return(NULL)}
-        extension <- tools::file_ext(inFile$name)
-        filepath <- inFile$datapath
-        df <- switch(extension,
-                     csv = read.csv(filepath, header = TRUE),
-                     xls = readxl::read_xls(filepath),
-                     xlsx = readxl::read_xlsx(filepath)
-                     )
-        return(df)
+        read_uploaded_table(input$formula2, check_names = TRUE)
         })
       if(is.null(formula2()$Formula)) {
         formula = formula1()
@@ -333,16 +324,7 @@ mod_09_msTool_server <- function(id){
         return(as.numeric(input$mz1))
         })
       mz2 <- reactive({
-        inFile <- input$mz2
-        if(is.null(inFile)){return(NULL)}
-        extension <- tools::file_ext(inFile$name)
-        filepath <- inFile$datapath
-        df <- switch(extension,
-                     csv = read.csv(filepath, header = TRUE),
-                     xls = readxl::read_xls(filepath),
-                     xlsx = readxl::read_xlsx(filepath)
-                     )
-        return(df)
+        read_uploaded_table(input$mz2, check_names = TRUE)
         })
       if(is.null(mz2()$mz)) {
         mzList = mz1()
@@ -415,16 +397,7 @@ mod_09_msTool_server <- function(id){
         return(as.numeric(input$noise1))
         })
       noise2 <- reactive({
-        inFile <- input$noise2
-        if(is.null(inFile)){return(NULL)}
-        extension <- tools::file_ext(inFile$name)
-        filepath <- inFile$datapath
-        df <- switch(extension,
-                     csv = read.csv(filepath, header = TRUE),
-                     xls = readxl::read_xls(filepath),
-                     xlsx = readxl::read_xlsx(filepath)
-                     )
-        return(df)
+        read_uploaded_table(input$noise2, check_names = TRUE)
         })
       if(is.null(noise2()$mz)) {
         noiseList = noise1()
@@ -484,9 +457,3 @@ mod_09_msTool_server <- function(id){
       })
     })
   }
-
-## To be copied in the UI
-# mod_09_msTool_ui("09_msTool_1")
-
-## To be copied in the server
-# mod_09_msTool_server("09_msTool_1")

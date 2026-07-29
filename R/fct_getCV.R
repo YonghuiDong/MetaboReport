@@ -4,7 +4,6 @@
 #' @param Group sample group information
 #' @importFrom stats sd
 #' @return a dataframe with mean values and cv
-#' @export
 #' @noRd
 #' @examples
 #' dat <- matrix(runif(2*300), ncol = 2, nrow = 300)

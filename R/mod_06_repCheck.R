@@ -6,7 +6,6 @@
 #'
 #' @noRd
 #'
-#' @rawNamespace import(shiny, except=c(dataTableOutput, renderDataTable))
 
 
 mod_06_repCheck_ui <- function(id){
@@ -98,16 +97,7 @@ mod_06_repCheck_server <- function(id){
     ns <- session$ns
     #1.Load Data ===============================================================
     inputData <- reactive({
-      inFile <- input$rawFile
-      if(is.null(inFile)){return(NULL)}
-      extension <- tools::file_ext(inFile$name)
-      filepath <- inFile$datapath
-      df <- switch(extension,
-                   csv = read.csv(filepath, header = TRUE, check.names = FALSE),
-                   xls = readxl::read_xls(filepath),
-                   xlsx = readxl::read_xlsx(filepath)
-                   )
-      return(df)
+      read_uploaded_table(input$rawFile)
     })
 
     #2. Show Result ============================================================
@@ -182,9 +172,3 @@ mod_06_repCheck_server <- function(id){
     })
   })
 }
-
-## To be copied in the UI
-# mod_06_repCheck_ui("06_repCheck_1")
-
-## To be copied in the server
-# mod_06_repCheck_server("06_repCheck_1")

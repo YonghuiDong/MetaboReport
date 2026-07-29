@@ -5,7 +5,6 @@
 #' @importFrom utils combn
 #' @return a dataframe with mean values and fold changes
 #' @noRd
-#' @export
 #' @examples
 #' dat <- matrix(runif(2*300), ncol = 2, nrow = 300)
 #' myGroup <- rep_len(LETTERS[1:2], 300)

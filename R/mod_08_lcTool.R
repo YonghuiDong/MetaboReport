@@ -148,9 +148,3 @@ mod_08_lcTool_server <- function(id){
       })
     })
   }
-
-## To be copied in the UI
-# mod_08_lcTool_ui("08_lcTool_1")
-
-## To be copied in the server
-# mod_08_lcTool_server("08_lcTool_1")

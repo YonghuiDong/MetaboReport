@@ -6,9 +6,7 @@
 #' @param FC select fold change values, default = 2
 #' @param pValue select p value, default = 0.05
 #' @importFrom ggplot2 aes
-#' @importFrom plotly ggplotly %>%
 #' @noRd
-#' @export
 #'@examples
 #'dat <- matrix(runif(2*300), ncol = 2, nrow = 300)
 #'myGroup <- rep_len(LETTERS[1:3], 300)
@@ -68,18 +66,42 @@ showVolcano <- function(result, compare_group, FC = 2, pValue = 0.05, interactiv
     new_iden[(new_iden$fold_change < -log2(FC) & new_iden$p_value >= -log10(pValue)),]$significant = "Significantly Down"
     }
 
+  volcano_colors <- c(
+    "Not Significant" = "#B3B3B3",
+    "Significantly Up" = nature_colors[[1L]],
+    "Significantly Down" = nature_colors[[2L]]
+  )
+  new_iden$significant <- factor(new_iden$significant, levels = names(volcano_colors))
+
   ##plot
   VP <- ggplot2::ggplot(new_iden, aes(x = fold_change, y = p_value, color = significant, text = rownames(result))) +
     ggplot2::geom_point() +
-    ggplot2::scale_color_manual(name = "Type", values = c("Grey", "steelblue1", "Tomato")) +
+    ggplot2::scale_color_manual(name = "Type", values = volcano_colors) +
     ggplot2::xlab("Log2(FC)") +
     ggplot2::ylab("-Log10(p-Value)") +
     ggplot2::ggtitle(paste("Volcano plot for sample groups:", compare_group[1], "vs", compare_group[2], sep = " ")) +
     ggplot2::theme_bw() +
     ggplot2::geom_vline(xintercept = c(-log2(FC), log2(FC)), col = "grey", linetype = "longdash") +
     ggplot2::geom_hline(yintercept = -log10(pValue), col = "grey", linetype = "longdash")
-  VP2 <- plotly::ggplotly(VP, tooltip = c("text")) %>%
-    plotly::config(toImageButtonOptions = list(format = "svg", filename = "volcanoPlot"))
-  if(!isTRUE(interactive)){VP2 <- VP}
-  return(VP2)
+  if (isTRUE(interactive)) {
+    new_iden$feature <- rownames(result)
+    VP <- plotly::plot_ly(
+      data = new_iden,
+      x = ~fold_change,
+      y = ~p_value,
+      color = ~significant,
+      colors = volcano_colors,
+      text = ~feature,
+      hoverinfo = "text",
+      type = "scatter",
+      mode = "markers"
+    ) %>%
+      plotly::layout(
+        title = paste("Volcano plot for sample groups:", compare_group[1], "vs", compare_group[2]),
+        xaxis = list(title = "Log2(FC)"),
+        yaxis = list(title = "-Log10(p-Value)")
+      ) %>%
+      plotly::config(toImageButtonOptions = list(format = "svg", filename = "volcanoPlot"))
+  }
+  return(VP)
 }

@@ -6,7 +6,6 @@
 #' @importFrom ropls opls
 #' @return a dataframe with vip values
 #' @noRd
-#' @export
 #' @examples
 #' dat <- matrix(runif(2*300), ncol = 2, nrow = 300)
 #' myGroup <- rep_len(LETTERS[1:3], 300)

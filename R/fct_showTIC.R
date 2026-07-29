@@ -6,7 +6,6 @@
 #' @param method which method is used to make boxplot, default is "fast".
 #' @importFrom ggplot2 aes element_blank
 #' @return boxplot
-#' @export
 #' @noRd
 #' @examples
 #' df <- data.frame(
@@ -23,10 +22,12 @@ showTIC <- function(df, Group = NULL){
   df$ID <- NULL
   quantiles <- t(apply(df, 2, quantile, probs = c(0.05, 0.25, 0.5, 0.75, 0.95)))
   if(is.null(Group)){Group = rownames(quantiles)}
+  Group <- as.factor(Group)
   df <- cbind.data.frame(Group = Group, Sample = rownames(quantiles), quantiles)
   #(2) Plot --------------------------------------------------------------------
   ggplot2::ggplot(df, aes(x = Sample, ymin = `5%`, lower =`25%`, middle = `50%`, upper = `75%`, ymax = `95%`, fill = Group)) +
     ggplot2::geom_boxplot(stat = "identity", alpha = 0.7) +
+    ggplot2::scale_fill_manual(values = nature_palette(nlevels(Group))) +
     ggplot2::ylab("Peak Area") +
     ggplot2::theme_bw() +
     ggplot2::theme(axis.text.x = element_blank())

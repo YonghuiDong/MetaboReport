@@ -12,7 +12,6 @@
 #' @importFrom dplyr %>% bind_rows row_number
 #' @return a dataframe which can be imported to LCMS instrument to build injection sequence.
 #' @noRd
-#' @export
 #' @examples
 #' df <- data.frame(Group = rep(c("A", "B", "C"), each = 20), Rep = rep(1:6, times = 10))
 #' result <- randomizeSeq(df, nBlank = 0, nQC = 6, nWithinBlank = 0, nEmptyCell = 2)
@@ -95,4 +94,52 @@ randomizeSeq <- function(df, nBlank = 0, nQC = 0, nWithinBlank = 0, nEmptyCell =
   suppressWarnings(df2$Position[is.na(df2$Position)] <- finalSeq2)
 
   return(df2)
+}
+
+#' Format an instrument injection sequence
+#'
+#' @param randomized A data frame returned by [randomizeSeq()].
+#' @param output_type Either `"Orbitrap"` or `"Waters"`.
+#' @noRd
+format_injection_sequence <- function(randomized, output_type) {
+  row_count <- nrow(randomized)
+
+  if (identical(output_type, "Orbitrap")) {
+    result <- as.data.frame(
+      setNames(
+        replicate(21L, character(row_count), simplify = FALSE),
+        c(
+          "Sample Type", "File Name", "Sample ID", "Path",
+          "Instrument Method", "Process Method", "Calibration File",
+          "Position", "Inj Vol", "Level", "Sample Wt", "Sample Vol",
+          "ISTD Amt", "Dil Factor", "L1 Study", "L2 Client",
+          "L3 Laboratory", "L4 Company", "L5 Phone", "Comment",
+          "Sample Name"
+        )
+      ),
+      check.names = FALSE
+    )
+    result$`Sample Type` <- "Unknown"
+    result$`File Name` <- randomized$Sample
+    result$Position <- randomized$Position
+    return(result)
+  }
+
+  if (identical(output_type, "Waters")) {
+    result <- as.data.frame(
+      setNames(
+        replicate(7L, character(row_count), simplify = FALSE),
+        c(
+          "File Name", "File Text", "MS File", "MS Tune File",
+          "Inlet File", "Bottle", "Injection Volume"
+        )
+      ),
+      check.names = FALSE
+    )
+    result$`File Name` <- randomized$Sample
+    result$Bottle <- randomized$Position
+    return(result)
+  }
+
+  stop("Unsupported output type: ", output_type)
 }

@@ -1,26 +1,27 @@
 Package: MetaboReport
-Title: PKG_TITLE
+Title: Interactive Metabolomics Analysis and Reporting
 Version: 0.3.2.9000
 Authors@R: 
     person("Yonghui", "Dong", , "yonghui.dong@gmail.com", role = c("cre", "aut"))
-Description: PKG_DESC.
-License: What license is it under?
+Author: Yonghui Dong [cre, aut]
+Maintainer: Yonghui Dong <yonghui.dong@gmail.com>
+Description: A modular Shiny application for preprocessing, analysing, and
+    visualising metabolomics data and generating self-contained HTML reports.
+License: file LICENSE
 Depends: 
     R (>= 4.2)
 Imports: 
     ComplexHeatmap,
-    config (>= 0.3.1),
-    data.table,
+    crosstalk,
     dplyr,
     DT,
     ggplot2,
     golem (>= 0.3.5),
     grDevices,
-    igraph,
-    markdown,
+    htmltools,
+    knitr,
     MSbox,
     plotly,
-    pkgload,
     readxl,
     rmarkdown,
     ropls,
@@ -34,6 +35,9 @@ Imports:
     utils,
     VIM,
     visNetwork
+Suggests:
+    pkgload,
+    testthat (>= 3.0.0)
 VignetteBuilder: 
     knitr
 Config/testthat/edition: 3

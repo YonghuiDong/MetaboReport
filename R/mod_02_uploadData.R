@@ -6,7 +6,6 @@
 #'
 #' @noRd
 #'
-#' @rawNamespace import(shiny, except=c(dataTableOutput, renderDataTable))
 
 
 mod_02_uploadData_ui <- function(id){
@@ -143,29 +142,11 @@ mod_02_uploadData_server <- function(id, sfData){
     #(1) Load Data =============================================================
     inputData <- reactive({
       if(input$showExample == "Yes"){return(cancerCell)}
-      inFile <- input$rawFile
-      if(is.null(inFile)){return(NULL)}
-      extension <- tools::file_ext(inFile$name)
-      filepath <- inFile$datapath
-      df <- switch(extension,
-                   csv = read.csv(filepath, header = TRUE, check.names = FALSE),
-                   xls = readxl::read_xls(filepath),
-                   xlsx = readxl::read_xlsx(filepath)
-                   )
-      return(df)
+      read_uploaded_table(input$rawFile)
     })
 
     inputMeta <- reactive({
-      inFile <- input$inputMeta
-      if(is.null(inFile)){return(NULL)}
-      extension <- tools::file_ext(inFile$name)
-      filepath <- inFile$datapath
-      df <- switch(extension,
-                   csv = read.csv(filepath, header = TRUE, check.names = FALSE),
-                   xls = readxl::read_xls(filepath),
-                   xlsx = readxl::read_xlsx(filepath)
-                   )
-      return(df)
+      read_uploaded_table(input$inputMeta)
     })
 
     #(2) Format Data ===========================================================
@@ -259,13 +240,5 @@ mod_02_uploadData_server <- function(id, sfData){
     })
 
     return(inputData)
-
-
-})}
-
-
-## To be copied in the UI
-# mod_02_uploadData_ui("02_uploadData_1")
-
-## To be copied in the server
-# mod_02_uploadData_server("02_uploadData_1")
+  })
+}

@@ -6,7 +6,6 @@
 #' @return a data frame with an additional column isReplicate to indicate which rows are replicated.
 #' @importFrom dplyr %>% n sym
 #' @noRd
-#' @export
 #' @examples
 #' # Example 1
 #' df <- data.frame(

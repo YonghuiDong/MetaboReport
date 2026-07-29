@@ -6,7 +6,6 @@
 #' @importFrom stats as.formula TukeyHSD formula terms terms.formula t.test pairwise.t.test
 #' @return a data frame with p-values
 #' @noRd
-#' @export
 #' @examples
 #' dat <- matrix(runif(2*300), ncol = 2, nrow = 300)
 #' myGroup <- rep_len(LETTERS[1:3], 300)

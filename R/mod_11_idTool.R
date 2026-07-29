@@ -6,7 +6,6 @@
 #'
 #' @noRd
 #'
-#' @rawNamespace import(shiny, except=c(dataTableOutput, renderDataTable))
 
 mod_11_idTool_ui <- function(id){
   ns <- NS(id)
@@ -109,29 +108,11 @@ mod_11_idTool_server <- function(id){
     ns <- session$ns
     ##(1) Load Data ----------------------------------------------------------
     sampleFile <- reactive({
-      inFile <- input$sampleFile
-      if(is.null(inFile)){return(NULL)}
-      extension <- tools::file_ext(inFile$name)
-      filepath <- inFile$datapath
-      df <- switch(extension,
-                   csv = read.csv(filepath, header = TRUE),
-                   xls = readxl::read_xls(filepath),
-                   xlsx = readxl::read_xlsx(filepath)
-                   )
-      return(df)
+      read_uploaded_table(input$sampleFile, check_names = TRUE)
       })
 
     dbFile <- reactive({
-      inFile <- input$dbFile
-      if(is.null(inFile)){return(NULL)}
-      extension <- tools::file_ext(inFile$name)
-      filepath <- inFile$datapath
-      df <- switch(extension,
-                   csv = read.csv(filepath, header = TRUE),
-                   xls = readxl::read_xls(filepath),
-                   xlsx = readxl::read_xlsx(filepath)
-                   )
-      return(df)
+      read_uploaded_table(input$dbFile, check_names = TRUE)
       })
 
     ppmTolerance <- reactive({input$ppmTolerance})
@@ -186,8 +167,8 @@ mod_11_idTool_server <- function(id){
       })
 
       output$idFile <- downloadHandler(
-        filename <- paste0("Identification", ".csv"),
-        content <- function(file) {
+        filename = "Identification.csv",
+        content = function(file) {
           write.csv(getIdentification(), file, row.names = FALSE)
         }
       )
@@ -196,9 +177,3 @@ mod_11_idTool_server <- function(id){
 
   })
 }
-
-## To be copied in the UI
-# mod_11_idTool_ui("11_idTool_1")
-
-## To be copied in the server
-# mod_11_idTool_server("11_idTool_1")

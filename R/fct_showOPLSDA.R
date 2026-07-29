@@ -7,7 +7,6 @@
 #' @param interactive should the plot be interactive? default is FALSE
 #' @importFrom ggplot2 aes
 #' @noRd
-#' @export
 #' @examples
 #' library(ropls)
 #' data(sacurine)
@@ -26,6 +25,7 @@ showOPLSDA <- function(oplsda, Group, size = 3, interactive = FALSE){
 
   #(3) plot
   df <- data.frame(t1 = oplsda@scoreMN,  ot1 = oplsda@orthoScoreMN[, 1], Group = Group)
+  colors <- nature_palette(nlevels(Group))
   p <- ggplot2::ggplot(df, aes(x = p1, y = ot1, color = Group, text = row.names(df))) +
     ggplot2::stat_ellipse(aes(fill = Group, group = Group), geom = "polygon", level = 0.95, alpha = 0.1, show.legend = F) +
     ggplot2::geom_point(size = size) +
@@ -41,22 +41,42 @@ showOPLSDA <- function(oplsda, Group, size = 3, interactive = FALSE){
     ggplot2::ylab("Orthogonal T score[1]") +
     ggplot2::ggtitle(paste("Sample groups:", levels(Group)[1], "vs", levels(Group)[2], sep = " ")
                      ) +
+    ggplot2::scale_color_manual(values = colors) +
+    ggplot2::scale_fill_manual(values = colors) +
     ggplot2::theme_bw()
   if(interactive){
-    p <- plotly::ggplotly(p) %>%
-      plotly::layout(annotations =
-                       list(text = paste0("R2X    R2Y    Q2    pR2Y    pQ2\n",
-                                          oplsda@summaryDF$`R2X(cum)`, "    ",
-                                          oplsda@summaryDF$`R2Y(cum)`, "    ",
-                                          oplsda@summaryDF$`Q2(cum)`, "    ",
-                                          oplsda@summaryDF$pR2Y, "    ",
-                                          oplsda@summaryDF$pQ2),
-                            showarrow = F,
-                            xref = 'paper', x = 0,
-                            yref = 'paper', y = 0,
-                            bgcolor = "#e8e8e8")
-
-                     ) # these info is lost when convert to plotly object
+    df$Sample_Name <- rownames(df)
+    p <- plotly::plot_ly(
+      data = df,
+      x = ~p1,
+      y = ~ot1,
+      color = ~Group,
+      colors = colors,
+      text = ~Sample_Name,
+      hoverinfo = "text",
+      type = "scatter",
+      mode = "markers",
+      marker = list(size = size * 3)
+    ) %>%
+      plotly::layout(
+        title = paste("Sample groups:", levels(Group)[1], "vs", levels(Group)[2]),
+        xaxis = list(title = paste0("T score[1] (", oplsda@modelDF$R2X[1] * 100, "%)")),
+        yaxis = list(title = "Orthogonal T score[1]"),
+        annotations = list(
+          text = paste0(
+            "R2X R2Y Q2 pR2Y pQ2: ",
+            oplsda@summaryDF$`R2X(cum)`, " ",
+            oplsda@summaryDF$`R2Y(cum)`, " ",
+            oplsda@summaryDF$`Q2(cum)`, " ",
+            oplsda@summaryDF$pR2Y, " ",
+            oplsda@summaryDF$pQ2
+          ),
+          showarrow = FALSE,
+          xref = "paper", x = 0,
+          yref = "paper", y = 0,
+          bgcolor = "#e8e8e8"
+        )
+      )
     }
   return(p)
 }

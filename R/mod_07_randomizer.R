@@ -145,142 +145,71 @@ mod_07_randomizer_ui <- function(id){
 #' 07_randomizer Server Functions
 #'
 #' @noRd
-mod_07_randomizer_server <- function(id){
-  moduleServer( id, function(input, output, session){
-    ns <- session$ns
+mod_07_randomizer_server <- function(id) {
+  moduleServer(id, function(input, output, session) {
+    randomized <- eventReactive(input$randomize, {
+      sample_list <- as.data.frame(input$sampleList, stringsAsFactors = FALSE)
+      replicates <- suppressWarnings(as.integer(sample_list$Replicates))
+      valid <-
+        nrow(sample_list) > 0L &&
+        all(!is.na(sample_list$Group)) &&
+        all(nzchar(trimws(sample_list$Group))) &&
+        all(!is.na(replicates)) &&
+        all(replicates > 0L)
+      validate(need(valid, "Enter a group and a positive replicate count in every row."))
 
-    #(1) Parameters ============================================================
-    nBlank <- reactive({input$nBlank})
-    nQC <- reactive({input$nQC})
-    nWithinBlank <- reactive({input$nWithinBlank})
-    nEmptyCell <- reactive({input$nEmptyCell})
-    plateRow <- reactive({input$plateRow})
-    plateCol <- reactive({input$plateCol})
-    plateIDType <- reactive({input$plateIDType})
-    outputType <- reactive({input$outputType})
+      design <- data.frame(
+        Group = rep(sample_list$Group, replicates),
+        stringsAsFactors = FALSE
+      )
+      design$Rep <- ave(seq_len(nrow(design)), design$Group, FUN = seq_along)
 
-    #(2) Show Result ===========================================================
-    observeEvent(input$randomize, {
+      randomizeSeq(
+        df = design,
+        nBlank = input$nBlank,
+        nQC = input$nQC,
+        nWithinBlank = input$nWithinBlank,
+        nEmptyCell = input$nEmptyCell,
+        plateRow = input$plateRow,
+        plateCol = input$plateCol,
+        plateIDType = input$plateIDType,
+        outputType = input$outputType
+      )
+    }, ignoreInit = TRUE)
 
-      ##(1) Load Data ---------------------------------------------------------
-      inputData <- reactive({
-        inFile <- input$sampleList
-        if(any(inFile == "")) {return(NULL)}
-        inFile <- as.data.frame(inFile)
-        suppressWarnings(inFile$Replicates <- as.numeric(inFile$Replicates))
-        if(is.na(sum(inFile$Replicates))) {return(NULL)} ## check non-numeric
-        if(any(inFile$Replicates <= 0)) {return(NULL)} ## check value < 0
+    sequence_file <- reactive({
+      req(randomized())
+      format_injection_sequence(randomized(), input$outputType)
+    })
 
-        DF <- data.frame(Group = rep(inFile$Group, times = inFile$Replicates)) %>%
-          dplyr::mutate(Group = as.factor(Group)) %>%
-          dplyr::group_by(Group) %>%
-          dplyr::mutate(Rep = 1:length(Group)) %>%
-          as.data.frame() ## important, otherwise it is not random
-        return(DF)
-        })
-
-      ##(2) Randomize sample ---------------------------------------------------
-      randomizedDF <- reactive({
-        shiny::validate(need(!is.null(inputData()), message = "No input Data"))
-        randomizeSeq(df = inputData(),
-                     nBlank = nBlank(),
-                     nQC = nQC(),
-                     nWithinBlank = nWithinBlank(),
-                     nEmptyCell = nEmptyCell(),
-                     plateRow = plateRow(),
-                     plateCol = plateCol(),
-                     plateIDType = plateIDType(),
-                     outputType = outputType()
-                     )
-        })
-
-      #(3) Prepare output file -------------------------------------------------
-      sequenceFile <- reactive({
-        getRows <- nrow(randomizedDF())
-        if(!is.null(randomizedDF()) & outputType() == "Orbitrap"){
-          header <- "Bracket Type=4"
-          thermoFile <- data.frame(
-            "Sample Type" = character(getRows),
-            "File Name" = character(getRows),
-            "Sample ID" = character(getRows),
-            "Path" = character(getRows),
-            "Instrument Method" = character(getRows),
-            "Process Method" = character(getRows),
-            "Calibration File" = character(getRows),
-            "Position" = character(getRows),
-            "Inj Vol" = character(getRows),
-            "Level" = character(getRows),
-            "Sample Wt" = character(getRows),
-            "Sample Vol" = character(getRows),
-            "ISTD Amt" = character(getRows),
-            "Dil Factor" = character(getRows),
-            "L1 Study" = character(getRows),
-            "L2 Client" = character(getRows),
-            "L3 Laboratory" = character(getRows),
-            "L4 Company" = character(getRows),
-            "L5 Phone" = character(getRows),
-            "Comment" = character(getRows),
-            "Sample Name" = character(getRows),
-            check.names = FALSE
-            )
-          thermoFile$`File Name` <- randomizedDF()$Sample
-          thermoFile$`Position` <- randomizedDF()$Position
-          thermoFile$`Sample Type` <- rep("Unknown", times = nrow(thermoFile))
-          return(thermoFile)
-        }
-        if(!is.null(randomizedDF()) & outputType() == "Waters"){
-          watersFile <- data.frame(
-            "File Name" = character(getRows),
-            "File Text" = character(getRows),
-            "MS File" = character(getRows),
-            "MS Tune File" = character(getRows),
-            "Inlet File" = character(getRows),
-            "Bottle" = character(getRows),
-            "Injection Volume" = character(getRows),
-            check.names = FALSE
-            )
-          watersFile$`File Name` <- randomizedDF()$Sample
-          watersFile$`Bottle` <- randomizedDF()$Position
-          return(watersFile)
-        }
-      })
-
-      ## (3) show randomized sample list ---------------------------------------
-      output$randomizedList <- DT::renderDataTable({
-        shiny::validate(need(!is.null(inputData()), message = "No input or Replicates should be positive numbers"))
-        DT::datatable(sequenceFile(),
-                      extensions = "Buttons",
-                      options = list(scrollX = TRUE,
-                                     deferRender = TRUE,
-                                     scroller = TRUE,
-                                     fixedColumns = FALSE,
-                                     editable = TRUE
-                                     )
-                      )
-        })
-
-      #(4) download result ----------------------------------------------------
-      output$downloadSeq <- renderUI({
-        if(!is.null(sequenceFile())) {
-          downloadButton(outputId = ns('seqFile'),
-                         label = paste('Download', outputType(), "Injection Sequence", sep = "_"),
-                         style = "color: #fff; background-color: #037e8a; border-color: #037e8a"
-                         )
-          }
-        })
-
-      output$seqFile <- downloadHandler(
-        filename <- paste0(outputType(), "_Sequence_", Sys.Date(), ".csv"),
-        content <- function(file) {
-          write.csv(sequenceFile(), file, row.names = FALSE)
-          }
+    output$randomizedList <- DT::renderDataTable({
+      DT::datatable(
+        sequence_file(),
+        extensions = "Buttons",
+        options = list(
+          scrollX = TRUE,
+          deferRender = TRUE,
+          scroller = TRUE,
+          fixedColumns = FALSE,
+          editable = TRUE
         )
-      })
+      )
+    })
+
+    output$downloadSeq <- renderUI({
+      req(sequence_file())
+      downloadButton(
+        outputId = session$ns("seqFile"),
+        label = paste("Download", input$outputType, "Injection Sequence", sep = "_"),
+        style = "color:#fff;background-color:#037e8a;border-color:#037e8a"
+      )
+    })
+
+    output$seqFile <- downloadHandler(
+      filename = function() paste0(input$outputType, "_Sequence_", Sys.Date(), ".csv"),
+      content = function(file) {
+        utils::write.csv(sequence_file(), file, row.names = FALSE)
+      }
+    )
   })
 }
-
-## To be copied in the UI
-# mod_07_randomizer_ui("07_randomizer_1")
-
-## To be copied in the server
-# mod_07_randomizer_server("07_randomizer_1")

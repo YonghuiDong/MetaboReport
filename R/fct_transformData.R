@@ -6,32 +6,6 @@
 #' @param rowName should attach row name? default is FALSE
 #' @return Transformed data frame
 #' @noRd
-#' @examples
-#' library(magrittr)
-#' library(data.table)
-#' load("data/cancerCell.rda")
-#' feature <- formatData(cancerCell)
-#' meta <- getMeta(feature)
-#' Group <- meta[, 2]
-#' a = transformDF(feature, Group)
-
-# transformDF <- function(df, Group = NULL, rowName = FALSE) {
-#   data.table::setDT(df)
-#   tem <- data.table::transpose(df[, !c("ID"), with = FALSE])
-#   colnames(tem) <- df$ID
-#   if(!is.null(Group)){
-#     tem[, Group := Group]
-#     tem <- tem[Group != "QC"]
-#     tem[, Group := NULL]
-#   }
-#   if(isTRUE(rowName)){
-#     data.table::setDF(tem)
-#     rownames(tem) <- setdiff(colnames(df), "ID")
-#   }
-#   return(tem)
-# }
-
-
 transformDF <- function(df, Group = NULL, rowName = FALSE) {
   tem <- as.data.frame(t(subset(df, select = -ID)))
   colnames(tem) <- df$ID

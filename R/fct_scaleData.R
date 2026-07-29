@@ -3,7 +3,6 @@
 #' @param DF a data frame, row is feature, and column is sample
 #' @param Method feature scaling method. "None" is without scaling;
 #' @return a row normalized dataframe
-#' @export
 #' @noRd
 #' @examples
 #' dat <- data.frame(S1 = c(1, 3, 4), S2 = c(1, 10, 3), S3 = c(2, 10, 20))

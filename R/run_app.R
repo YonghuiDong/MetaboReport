@@ -1,6 +1,7 @@
 #' Run the Shiny Application
 #'
 #' @param ... arguments to pass to golem_opts.
+#' @param max_upload_mb Maximum accepted upload size in megabytes.
 #' See `?golem::get_golem_options` for more details.
 #' @inheritParams shiny::shinyApp
 #'
@@ -12,8 +13,10 @@ run_app <- function(
   options = list(),
   enableBookmarking = NULL,
   uiPattern = "/",
+  max_upload_mb = 10000,
   ...
 ) {
+  options(shiny.maxRequestSize = max_upload_mb * 1024^2)
   with_golem_options(
     app = shinyApp(
       ui = app_ui,
