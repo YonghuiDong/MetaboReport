@@ -96,14 +96,14 @@ mod_05_downloadReport_ui <- function(id){
       column(width = 7,
              box(width = 12,
                  inputId = "report_card",
-                 title = strong("Report"),
+                 title = strong("Report / 报告"),
                  status = "success",
                  solidHeader = FALSE,
                  collapsible = TRUE,
                  collapsed = FALSE,
                  closable = FALSE,
-                 p(style = "color:#b2182b;", shiny::icon("bell"), strong("Note: ")),
-                 p(style = "color:#b2182b;", "Generating a report may take a few minutes. Click one download button only once."),
+                 p(style = "color:#b2182b;", shiny::icon("bell"), strong("Note / 注意：")),
+                 p(style = "color:#b2182b;", "Generating a report may take a few minutes. Click one download button only once. / 生成报告可能需要几分钟，请勿重复点击下载按钮。"),
                  uiOutput(ns("report_button"))
                  )
              )
@@ -159,12 +159,8 @@ mod_05_downloadReport_server <- function(id, sfData, inputData, resultList) {
     })
 
     report_download <- function(language) {
-      chinese <- identical(language, "zh")
-      steps <- if (chinese) {
-        c("收集分析结果", "验证报告输入", "准备报告文件", "生成 HTML 报告", "完成下载文件")
-      } else {
-        c("Collect analysis results", "Validate report inputs", "Prepare report files", "Render HTML report", "Finalize download file")
-      }
+      report_language <- if (identical(language, "zh")) "Chinese" else "English"
+      steps <- c("Collect analysis results", "Validate report inputs", "Prepare report files", "Render HTML report", "Finalize download file")
 
       downloadHandler(
         filename = function() paste0(Sys.Date(), "_Report_", toupper(language), ".html"),
@@ -179,7 +175,7 @@ mod_05_downloadReport_server <- function(id, sfData, inputData, resultList) {
           )
           params$reportLanguage <- language
           shiny::withProgress(
-            message = if (chinese) "正在生成中文报告" else "Generating English report",
+            message = paste("Generating", report_language, "report"),
             min = 0,
             max = 5,
             value = 0,
