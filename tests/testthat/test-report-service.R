@@ -24,3 +24,11 @@ test_that("blank report methods are labeled as not provided", {
   methods <- MetaboReport:::format_report_methods("", " ", NA_character_)
   expect_equal(lengths(regmatches(methods, gregexpr("Not provided", methods))), 3L)
 })
+
+test_that("report comparisons exclude QC and handle a single group", {
+  expect_equal(
+    MetaboReport:::report_group_pairs(c("B", "A", "QC")),
+    list(c("A", "B"))
+  )
+  expect_equal(MetaboReport:::report_group_pairs(c("A", "QC")), list())
+})

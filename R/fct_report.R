@@ -9,6 +9,15 @@ report_parameter_names <- c(
   "mySamplePrep", "mySampleAnalysis", "myDataProcessing"
 )
 
+#' Build all pairwise comparisons for non-QC groups
+#'
+#' @noRd
+report_group_pairs <- function(group) {
+  groups <- setdiff(levels(as.factor(group)), "QC")
+  if (length(groups) < 2L) return(list())
+  utils::combn(groups, 2L, simplify = FALSE)
+}
+
 #' Format the optional Materials and Methods section
 #'
 #' @noRd
