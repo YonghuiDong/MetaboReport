@@ -6,15 +6,13 @@ output:
     css: custom.css
 ---
 
-<b><span style="color:#5c5d61; font-size:30px;"> Welcome to MetaboReport (v0.3.1)</span></b>
-
 <img src='img/logo.png' align="right" height="180"/>
 
 <br></br>
 
 <span style="color:#E1937A; font-size:20px;">MetaboReport</span> is an intuitive, web-based platform designed to streamline the exploration, visualization, and statistical analysis of metabolomics data. It offers a structured and user-friendly workflow, making it a flexible tool for users of all levels.
 
-The workflow includes pre-processing (e.g., missing value imputation, QC-based feature filtering, normalization, transformation and scaling), univariate and multivariate statistical analyses, and visualization of the given metabolomics data. To aid interpretation, a comprehensive HTML report is generated that includes interactive visualizations, tables, summary statistics, and detailed explanations for the users, facilitating an in-depth inspection of the results (Figure 1).
+The workflow includes preprocessing (e.g., missing-value imputation, QC-based feature filtering, normalization, transformation, and scaling), univariate and multivariate statistical analyses, and visualization of metabolomics data. To aid interpretation, MetaboReport generates a comprehensive HTML report containing visualizations, tables, summary statistics, and explanatory text (Figure 1).
 
 ---
 
@@ -26,28 +24,28 @@ Below is the general workflow of MetaboReport:
 
 <img src='img/workflow.png' alt='workflow' title='workflow' style="vertical-align:middle;margin:0px 100px" width='700'/>
 
-Figure. 1 Typical workflow of MetaboReport.
+Figure 1. Typical MetaboReport workflow.
 
 <br></br>
 
 <b><span style="color:#5c5d61; font-size:22px;">How to Use MetaboReport</span></b>
 
-Using MetaboReport is straightforward. Simply follow the step-by-step instructions provided in each tab to perform your data analysis. For further guidance, follow the user manual, or play with the included demo data to get a hands-on feel for the software.
+Follow the step-by-step instructions in each page to perform your analysis. For further guidance, read the user manual or explore the included demo data.
 
 <b><span style="color:#5c5d61; font-size:22px;">1. User Manual</span></b>
 
-> For information on <span style="color:#E1937A">how to prepare an input data table</span>, please refer to this concise manual: <a href="www/Manual.pdf" target="_new"><i class="fa fa-file-pdf-o fa-xl" aria-hidden="true"></i></a>
+> For guidance on <span style="color:#E1937A">preparing an input data table</span>, see the <a href="www/Manual.pdf" target="_blank"><i class="fa fa-file-pdf-o fa-xl" aria-hidden="true"></i> user manual (PDF)</a>.
 >
-> Additionally, in the Data Upload panel, we have included a demo dataset for you to play with.
+> You can also load the built-in demo dataset from the Upload Data page.
 
 <b><span style="color:#5c5d61; font-size:22px;">2. Demo Data</span></b>
 
-To assist in preparing input data for MetaboReport, you can use the two demo data sets as reference.
+Use these two demo datasets as references when preparing input data for MetaboReport.
 
-Please select <span style="color:#E1937A">Other Format</span> when uploading the demo data in <span style="color:#E1937A">Upload Data</span> tab.
+Select <span style="color:#E1937A">Other format</span> when uploading these files on the <span style="color:#E1937A">Upload Data</span> page.
 
-> Demo data table 1: It was preapred using method 1 (see manual), and peak area table and metadata table are in the same table: <a href="www/demo/M1_Feature_Metadata_Table.csv" target="_new"><i class="fa fa-download fa-s" aria-hidden="true"></i></i></a>
+> Demo dataset 1 was prepared using Method 1 (see the manual). Peak-area data and metadata are stored in one table: <a href="www/demo/M1_Feature_Metadata_Table.csv" download><i class="fa fa-download fa-s" aria-hidden="true"></i> download dataset 1 (CSV)</a>.
 >
-> Demo data table 2: It was prepared using method 2 (see manual), and peak area table and metadata table are two seperated tables: (1) Peak Area Table <a href="www/demo/M2_Feature_Table.csv" target="_new"><i class="fa fa-download fa-s" aria-hidden="true"></i></i></a>, (2) Metadata Table <a href="www/demo/M2_Medadata_Table.xlsx" target="_new"><i class="fa fa-download fa-s" aria-hidden="true"></i></i></a>
+> Demo dataset 2 was prepared using Method 2 (see the manual). Peak-area data and metadata are stored in separate tables: (1) <a href="www/demo/M2_Feature_Table.csv" download><i class="fa fa-download fa-s" aria-hidden="true"></i> peak-area table (CSV)</a>; (2) <a href="www/demo/M2_Medadata_Table.xlsx" download><i class="fa fa-download fa-s" aria-hidden="true"></i> metadata table (XLSX)</a>.
 
 ---

@@ -23,11 +23,9 @@ mod_03_preprocess_ui <- function(id){
                collapsible = TRUE,
                collapsed = FALSE,
                closable = FALSE,
-               p("1. If you have missing values in your data, please select the method in", strong("Missing Value Imputation"), "tab to fill the missing value; otherwise you can ignore this step."),
-               p("2. If you have pooled QCs in your data, you can filter the unstable features from", strong("QC-based Data Filtering"), "tab. The default CV threshould is 30%, meaning that features
-                 with CV > 30 in pooled QCs will be filtered out. You can set the CV threshould according to your study."),
-               p("3. You can normalized, transform and scale your data in", strong("Data Treatment"), "tab. The TIC barplot, PCA score plot, and feature distribution plot can be used to help
-                 you select the most appropriate data treatment method.")
+               p("1. If your data contain missing values, choose a method in", strong("Missing Value Imputation"), "; otherwise, skip this step."),
+               p("2. If your data contain pooled QC samples, use", strong("QC-based Data Filtering"), "to remove unstable features. The default CV threshold is 30%, so features with CV > 30% in pooled QCs are filtered out. Adjust the threshold to suit your study."),
+               p("3. Use", strong("Data Treatment"), "to normalize, transform, and scale the data. The total-intensity bar plot, PCA score plot, and feature-distribution plots can help you choose suitable settings.")
                )
              ),
 
@@ -44,16 +42,16 @@ mod_03_preprocess_ui <- function(id){
                collapsed = FALSE,
                closable = FALSE,
                p(style = "color:#C70039;", shiny::icon("bell"), strong("Note:")),
-               p(style = "color:#C70039;", "This step will be auto-skipped if no missing values are detected"),
+               p(style = "color:#C70039;", "This step is automatically skipped if no missing values are detected."),
                p(strong("Select (a) or (b):")),
-               p(style = "color:#C70039;", "(a) Missing Not At Random (MNAR)"),
-               p(style = "color:#C70039;", "(b) Missing Completely At Random (MCAR)"),
+               p(style = "color:#C70039;", "(a) Missing Not at Random (MNAR)"),
+               p(style = "color:#C70039;", "(b) Missing Completely at Random (MCAR)"),
 
                radioButtons(inputId = ns("missingValue"),
-                            label = "1. Compute/Replace missing value with:",
+                            label = "1. Replace missing values with",
                             choices = c("1 (a)" = "1",
                                         "1/5 minimum of the mass feature, LOD (a)" = "HM",
-                                        "k-Nearest Neighbours (b)" = "KNN",
+                                        "k-nearest neighbors (b)" = "KNN",
                                         "Feature mean (b)" = "Mean",
                                         "Feature median (b)" = "Median"
                                         ),
@@ -72,16 +70,16 @@ mod_03_preprocess_ui <- function(id){
                collapsed = FALSE,
                closable = FALSE,
                radioButtons(inputId = ns("QCFiltering"),
-                            label = "2. Feature filter using QC samples?",
+                            label = "2. Filter features using QC samples?",
                             choices = c("Yes" = "1", "No" = "0"),
                             selected = "1"
                             ),
 
                p(style = "color:#C70039;", shiny::icon("bell"), strong("Note: ")),
-               p(style = "color:#C70039;", "Features with CV value > the threshold will be filtered out"),
+               p(style = "color:#C70039;", "Features with CV values above the threshold will be filtered out."),
 
                sliderInput(inputId = ns("QCCV"),
-                           label = "If [Yes]: input CV% filtering threshold in QC",
+                           label = "If Yes, enter the QC CV% filtering threshold",
                            value = 30,
                            min = 0,
                            max = 100
@@ -112,7 +110,7 @@ mod_03_preprocess_ui <- function(id){
                             ),
 
                uiOutput(outputId = ns("selectIS"),
-                        label = "Please select the row No. of your internal standard(s)"
+                        label = "Select the row number(s) of your internal standard(s)"
                         ),
 
                radioButtons(inputId = ns("transformMethod"),
@@ -144,7 +142,7 @@ mod_03_preprocess_ui <- function(id){
              box(
                width = 12,
                inputId = ns("Table_card"),
-               title = strong("Sample Table Panel"),
+               title = strong("Processed Data Table"),
                status = "success",
                solidHeader = FALSE,
                collapsible = TRUE,
@@ -153,11 +151,8 @@ mod_03_preprocess_ui <- function(id){
                p(style = "color:#C70039;", shiny::icon("bell"), strong("Note: ")),
                p(style = "color:#C70039;", "1. If you plan to use internal standard-based normalization,
                  you can use this table to check the row numbers of your internal standard(s)."),
-               p(style = "color:#C70039;", "2. You can use more than 1 internal standard for IS-based normalization.
-                 The mean peak area will be used for normalization"),
-               p(style = "color:#C70039;", "3. If only 1 internal standard is used, a random noise will be added
-                 to the internal standard peak areas after normalization so as to avoid any possible errors in the
-                 following multivariate analyses."),
+               p(style = "color:#C70039;", "2. You can use more than one internal standard for IS-based normalization. The mean peak area is used for normalization."),
+               p(style = "color:#C70039;", "3. If only one internal standard is used, a small amount of random noise is added to its normalized peak areas to prevent errors in subsequent multivariate analyses."),
                shinycssloaders::withSpinner(DT::dataTableOutput(ns("filteredTable")), type = 5)
              ),
 
@@ -165,20 +160,18 @@ mod_03_preprocess_ui <- function(id){
              box(
                width = 12,
                inputId = ns("Boxplot_card"),
-               title = strong("Feature Boxplot Panel"),
+               title = strong("Feature Distribution Panel"),
                status = "success",
                solidHeader = FALSE,
                collapsible = TRUE,
                collapsed = FALSE,
                closable = FALSE,
                p(style = "color:#C70039;", shiny::icon("bell"), strong("Note: ")),
-               p(style = "color:#C70039;", "1. The Boxplot shows you how the feature distributions change upon
-                 using different sample normalization methods."),
-               p(style = "color:#C70039;", "2. The Boxplot can be used to select sample normalization method."),
-               p(style = "color:#C70039;", "3. Scaling is not applied here, therefore change of scaling method will not
-                 affect Boxplot."),
+               p(style = "color:#C70039;", "1. The box plot shows how feature distributions change with different sample-normalization methods."),
+               p(style = "color:#C70039;", "2. Use the box plot to help select a sample-normalization method."),
+               p(style = "color:#C70039;", "3. Scaling is not applied here, so changing the scaling method does not affect this plot."),
                varSelectInput(inputId = ns("prePCAGroup"),
-                              label = "1. Select MetaData (Sample Groups) for Sample Coloring",
+                              label = "1. Select metadata (sample groups) for sample coloring",
                               data = ""
                               ),
                shinycssloaders::withSpinner(shiny::plotOutput(ns("TICPlot")), type = 5)
@@ -197,7 +190,7 @@ mod_03_preprocess_ui <- function(id){
                fluidRow(width = 12,
                         column(width = 6,
                                selectInput(inputId = ns("prePCAX"),
-                                           label = "Which PC in X-axis?",
+                                           label = "Which PC on the x-axis?",
                                            choices = list(1, 2, 3, 4),
                                            selected = 1,
                                            multiple = FALSE
@@ -206,7 +199,7 @@ mod_03_preprocess_ui <- function(id){
 
                         column(width = 6,
                                selectInput(inputId = ns("prePCAY"),
-                                           label = "Which PC in Y-axis?",
+                                           label = "Which PC on the y-axis?",
                                            choices = list(1, 2, 3, 4),
                                            selected = 2,
                                            multiple = FALSE
@@ -216,7 +209,11 @@ mod_03_preprocess_ui <- function(id){
                         column(width = 6,
                                radioButtons(inputId = ns("prePCAFrame"),
                                             label = "Add frame for group?",
-                                            choices = list("none", "polygon", "norm"),
+                                            choices = c(
+                                              "None" = "none",
+                                              "Convex hull" = "polygon",
+                                              "95% confidence ellipse" = "norm"
+                                            ),
                                             selected = "none"
                                             )
                                )
@@ -235,11 +232,11 @@ mod_03_preprocess_ui <- function(id){
                collapsed = FALSE,
                closable = FALSE,
                p(style = "color:#C70039;", shiny::icon("bell"), strong("Note: ")),
-               p(style = "color:#C70039;", "1. You can click this button to view the results for 30 randomly selected features"),
-               p(style = "color:#C70039;", "2. You can click this button many times to view different features"),
+               p(style = "color:#C70039;", "1. Click the button to view 30 randomly selected features."),
+               p(style = "color:#C70039;", "2. Click again to sample a different set of features."),
 
                actionButton(inputId = ns("featureSampling"),
-                            label = "Sampling",
+                            label = "Resample Features",
                             icon = icon("paper-plane"),
                             style = "color: #fff; background-color: #7570b3; border-color: #7570b3"
                             ),
@@ -316,7 +313,7 @@ mod_03_preprocess_server <- function(id, sfData){
       output$selectIS <- renderUI({
         shiny::req(sfData$data)
         selectizeInput(inputId = ns("selectIS"),
-                       label = "Input row numbers of your internal standard(s)",
+                       label = "Select the row number(s) of your internal standard(s)",
                        multiple = TRUE,
                        choices = 1:nrow(sfData$data),
                        selected = 1
@@ -420,7 +417,7 @@ mod_03_preprocess_server <- function(id, sfData){
 
     ##(2) Feature Box Plot------------------------------------------------------
     output$TICPlot <- shiny::renderPlot({
-      shiny::validate(need(!is.null(sfData$data), message = "Input data not found"))
+      shiny::req(sfData$filterNormTransform, sfData$group, prePCAGroup())
       showTIC(df = sfData$filterNormTransform, Group = sfData$group[, prePCAGroup()])
     })
 

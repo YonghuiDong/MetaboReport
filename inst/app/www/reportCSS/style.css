@@ -1,16 +1,19 @@
 /* Whole document: */
-body{
+body {
   font-family: Arial, "Helvetica Neue", Helvetica, sans-serif !important;
-  font-size: 14px !important;
-  text-align: justify !important;
+  font-size: 15px !important;
+  line-height: 1.55 !important;
+  text-align: left !important;
 }
 
 /* Quoted text  */
-blockquote{
+blockquote {
   font-family: Arial, "Helvetica Neue", Helvetica, sans-serif !important;
   background: white !important;
   border-left: 0.2em solid #76D7C4 !important;
-  font-size: 14px !important;
+  font-size: 15px !important;
+  line-height: 1.5 !important;
+  text-align: left !important;
 }
 
 /* Code text  */

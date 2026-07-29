@@ -5,11 +5,11 @@
 
 <br></br>
 
-<b><span style="color:#5c5d61; font-size:22px;">Feature Request/Bug Report</span></b>
+<b><span style="color:#5c5d61; font-size:22px;">Feature Requests and Bug Reports</span></b>
 
 To report bugs or request new features, please send an email to:
 
-**Dr.Yonghui Dong** [<i class="fa fa-envelope-o fa-l" aria-hidden="true"></i>](mailto:yonghui.dong@gmail.com) or **Dr.Sergey Malitsky** [<i class="fa fa-envelope-o fa-l" aria-hidden="true"></i>](mailto:sergey.malitsky@weizmann.ac.il)
+[**Dr. Yonghui Dong** <i class="fa fa-envelope-o fa-l" aria-hidden="true"></i>](mailto:yonghui.dong@gmail.com) or [**Dr. Sergey Malitsky** <i class="fa fa-envelope-o fa-l" aria-hidden="true"></i>](mailto:sergey.malitsky@weizmann.ac.il)
 
 ------
 
@@ -17,13 +17,13 @@ To report bugs or request new features, please send an email to:
 
 If you find MetaboReport useful, kindly consider citing our manuscript in your work. Thank you. <b><span style="color:#FF8B8B"><i class="fa fa-heart fa-1xl" aria-hidden="true"></i></span></b> <b><span style="color:#FF8B8B"><i class="fa fa-heart fa-2xl" aria-hidden="true"></i></span></b> <b><span style="color:#FF8B8B"><i class="fa fa-heart fa-1xl" aria-hidden="true"></i></span></b>
 
-> MetaboReport: From Metabolomics Data Analysis to Comprehensive Reporting
+> Dong, Y. and Malitsky, S., 2024. MetaboReport: from metabolomics data analysis to comprehensive reporting. *Bioinformatics*, *40*(6), p.btae373.
 
 ------
 
 <b><span style="color:#5c5d61; font-size:22px;">References</span></b>
 
-The following papers are referenced during the development of MetaboReport:
+The following papers informed the development of MetaboReport:
 
 [1] Di Guida, R., Engel, J., Allwood, J.W., Weber, R.J., Jones, M.R., Sommer, U., Viant, M.R. and Dunn, W.B., 2016. Non-targeted UHPLC-MS metabolomic data processing methods: a comparative investigation of normalisation, missing value imputation, transformation and scaling. Metabolomics, 12(5), pp.1-14. 
 

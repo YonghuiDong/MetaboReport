@@ -6,8 +6,37 @@ report_parameter_names <- c(
   "statTable", "VCGroup", "myStat", "myPCAPlot", "myHMPlot",
   "dataGlobal3Transform", "BPGroup", "BPTransform", "KMTrendPlot",
   "KMTable", "projectName", "authorName", "showIntro", "showMethods",
-  "mySamplePrep"
+  "mySamplePrep", "mySampleAnalysis", "myDataProcessing"
 )
+
+#' Format the optional Materials and Methods section
+#'
+#' @noRd
+format_report_methods <- function(
+  sample_preparation,
+  sample_analysis,
+  data_processing
+) {
+  method_text <- function(x) {
+    if (length(x) != 1L || is.na(x) || !nzchar(trimws(x))) {
+      return("*Not provided.*")
+    }
+    x
+  }
+
+  paste0(
+    "# Materials and Methods\n\n",
+    "> <span style = \"color : #FF8300\">**Note:**</span>\n>\n",
+    "> (1) If a method is not provided below, ask the person who performed the corresponding experiment or analysis.\n>\n",
+    "> (2) Adapt the text to your study and journal requirements before using it in a manuscript.\n\n",
+    "## Sample Preparation Method\n\n",
+    method_text(sample_preparation), "\n\n",
+    "## Sample Analysis Method\n\n",
+    method_text(sample_analysis), "\n\n",
+    "## Data Processing Method\n\n",
+    method_text(data_processing), "\n"
+  )
+}
 
 #' Validate report parameters
 #'

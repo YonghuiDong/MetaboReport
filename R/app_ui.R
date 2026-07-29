@@ -27,7 +27,7 @@ app_ui <- function(request) {
           hr(),
           dashboard_nav_item(
             "Widgets", "widgets", "tools",
-            menuSubItem("Replicate Check", tabName = "repCheck", icon = icon("bolt")),
+            menuSubItem("Duplicate Check", tabName = "repCheck", icon = icon("bolt")),
             menuSubItem("Randomizer", tabName = "randomizer", icon = icon("bolt")),
             menuSubItem("LC Tool", tabName = "lcTool", icon = icon("bolt")),
             menuSubItem("MS Tool", tabName = "msTool", icon = icon("bolt")),
@@ -58,21 +58,21 @@ app_ui <- function(request) {
 
 #' Add packaged resources to the application
 #'
-#' @importFrom golem add_resource_path favicon bundle_resources
+#' @importFrom golem add_resource_path favicon
 #' @noRd
 golem_add_external_resources <- function() {
   golem::add_resource_path("www", app_sys("app/www"))
 
   tags$head(
     golem::favicon(),
-    golem::bundle_resources(
-      path = app_sys("app/www"),
-      app_title = "MetaboReport"
-    ),
+    tags$title("MetaboReport"),
     tags$link(
       rel = "stylesheet",
       type = "text/css",
-      href = "www/custom.css"
+      href = sprintf(
+        "www/custom.css?v=%s",
+        utils::packageVersion("MetaboReport")
+      )
     )
   )
 }

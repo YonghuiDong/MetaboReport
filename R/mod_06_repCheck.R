@@ -22,17 +22,12 @@ mod_06_repCheck_ui <- function(id){
                collapsible = TRUE,
                collapsed = FALSE,
                closable = FALSE,
-               p("1. This widget is designed to check if any duplicate rows exist."),
-               p("2. After uploading the data table, you can select the columns to define duplicate rows."),
-               p("3. Two types of duplicates are defined:", strong("Type A columns:"), "rows are considered duplicates for the selected Type A columns
-                 if all elements from those columns are identical. For instance, if rows with both identical molecular weight and identification, then these
-                 rows are considered as duplicates. ", strong("Type B columns:"), "rows are considered duplicates for the selected Type B
-                 columns if any one element from those columns is identical. For instance, if rows with either molecular weight or identification identical, these
-                 rows are considered as duplicates. Finally, rows are considered duplicates for the entire data table only if when they are duplicates in both Type A and Type B."),
-               p("4. You can select type A and type B columns in the follow boxes. You can also leave one of them empty according to your needs, but you cannot
-                 leave both empty."),
-               p("5. Click", strong("Submit"), "button to perform duplicate analysis."),
-               p("6. A label", strong("true"), "will be added to duplicate rows. For rows without any duplicates, a label", strong("false"), "will be added.")
+               p("1. Use this widget to identify duplicate rows in a data table."),
+               p("2. After uploading a table, select the columns used to define duplicates."),
+               p("3.", strong("Type A columns:"), "rows match only when all selected Type A values are identical.", strong("Type B columns:"), "rows match when any selected Type B value is identical. When both types are selected, both conditions must be satisfied."),
+               p("4. Type A or Type B may be left empty, but at least one column must be selected."),
+               p("5. Click", strong("Submit"), "to run the duplicate check."),
+               p("6. The result adds an", strong("isReplicate"), "column: TRUE marks duplicate rows and FALSE marks rows without a duplicate.")
                )
              ),
 
@@ -42,16 +37,16 @@ mod_06_repCheck_ui <- function(id){
              box(
                width = 12,
                inputId = "input_card",
-               title = strong("Data Input Panel"),
+               title = strong("Data Input"),
                status = "primary",
                solidHeader = TRUE,
                collapsible = FALSE,
                collapsed = FALSE,
                closable = FALSE,
                fileInput(inputId = ns("rawFile"),
-                         label = "1. Upload Data Table:",
+                         label = "1. Upload data table",
                          multiple = FALSE,
-                         placeholder = "accepts csv, xls or xlsx format",
+                         placeholder = "Accepts CSV, XLS, or XLSX files.",
                          accept = c(".csv", ".xls", ".xlsx")
                          ),
                column(width = 6,
@@ -73,7 +68,7 @@ mod_06_repCheck_ui <- function(id){
              box(
                width = 12,
                inputId = "repCheck_card",
-               title = strong("Replicate Check Data Panel"),
+               title = strong("Duplicate Check Results"),
                status = "success",
                solidHeader = FALSE,
                collapsible = TRUE,
@@ -106,7 +101,7 @@ mod_06_repCheck_server <- function(id){
     output$selectColumnAllOut <- renderUI({
       shiny::req(inputData())
       selectInput(inputId = ns("selectColumnAll"),
-                  label = "Select columns type A",
+                  label = "Select Type A columns",
                   multiple = TRUE,
                   choices = names(inputData())
                   )
@@ -115,7 +110,7 @@ mod_06_repCheck_server <- function(id){
     output$selectColumnAnyOut <- renderUI({
       shiny::req(inputData())
       selectInput(inputId = ns("selectColumnAny"),
-                  label = "Select columns type B",
+                  label = "Select Type B columns",
                   multiple = TRUE,
                   choices = names(inputData())
                   )
@@ -144,7 +139,10 @@ mod_06_repCheck_server <- function(id){
     ##(2) Replicates Analysis --------------------------------------------------
     observeEvent(input$submit, {
       shiny::req(inputData())
-      shiny::validate(need(!is.null(input$selectColumnAll), message = "At least one column should be selected"))
+      shiny::validate(need(
+        !is.null(input$selectColumnAll) || !is.null(input$selectColumnAny),
+        message = "Select at least one Type A or Type B column."
+      ))
       repData <- checkReplicates(df = inputData(),
                                  col_all = input$selectColumnAll,
                                  col_any = input$selectColumnAny)

@@ -21,10 +21,11 @@ mod_11_idTool_ui <- function(id){
                collapsible = TRUE,
                collapsed = FALSE,
                closable = FALSE,
-               p("1. This widget is designed for identifing metabolites using your own database."),
+               p("1. Use this widget to putatively annotate metabolites with your own database."),
                p("2. Both your sample table and database table should contain a column named", strong("mz"), "."),
                p("3. To search by retention time, ensure that both your sample table and database table have a column labeled",
-                 strong("RT"), ".Note that the retention time should be expressed in minutes.")
+                 strong("RT"), ". Retention time must be expressed in minutes."),
+               p("4. Matches are candidate annotations and should be confirmed with additional evidence where possible.")
                )
              ),
 
@@ -34,22 +35,22 @@ mod_11_idTool_ui <- function(id){
              box(
                width = 12,
                inputId = "input_card",
-               title = strong("Data Input Panel"),
+               title = strong("Data Input"),
                status = "primary",
                solidHeader = TRUE,
                collapsible = FALSE,
                collapsed = FALSE,
                closable = FALSE,
                fileInput(inputId = ns("sampleFile"),
-                         label = "1. Upload Sample Table.",
+                         label = "1. Upload sample table",
                          multiple = FALSE,
-                         placeholder = "accepts csv, xls or xlsx format",
+                         placeholder = "Accepts CSV, XLS, or XLSX files.",
                          accept = c(".csv", ".xls", ".xlsx")
                          ),
                fileInput(inputId = ns("dbFile"),
-                         label = "2. Upload Your Database Table:",
+                         label = "2. Upload database table",
                          multiple = FALSE,
-                         placeholder = "accepts csv, xls or xlsx format",
+                         placeholder = "Accepts CSV, XLS, or XLSX files.",
                          accept = c(".csv", ".xls", ".xlsx")
                          ),
                sliderInput(inputId = ns("ppmTolerance"),
@@ -59,13 +60,13 @@ mod_11_idTool_ui <- function(id){
                            value = 5,
                            step = 1),
                selectInput(inputId = ns("useRT"),
-                           label = "Do you want to search retention time?",
+                           label = "4. Match by retention time?",
                            choices = list("Yes", "No"),
                            selected = "No",
                            multiple = FALSE
                            ),
                sliderInput(inputId = ns("rtTolerance"),
-                           label = "3. If Yes, select retention time tolerance (min)",
+                           label = "4.1 If Yes, select the retention-time tolerance (min)",
                            min = 0.2 ,
                            max = 10,
                            value = 1,
@@ -83,7 +84,7 @@ mod_11_idTool_ui <- function(id){
              box(
                width = 12,
                inputId = "repCheck_card",
-               title = strong("Replicate Check Data Panel"),
+               title = strong("Candidate Matches"),
                status = "success",
                solidHeader = FALSE,
                collapsible = TRUE,

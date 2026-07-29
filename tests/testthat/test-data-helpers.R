@@ -32,6 +32,15 @@ test_that("separate metadata defines stable sample names", {
   expect_identical(names(result), c("ID", "Control_A_1", "Treatment_A_2"))
 })
 
+test_that("Method 2 rejects sample columns without the underscore separator", {
+  raw <- data.frame(Name = "A", Sample1 = 1, Sample2 = 2)
+
+  expect_error(
+    MetaboReport:::formatData(raw, format = "Other"),
+    "No sample intensity columns"
+  )
+})
+
 test_that("all imputation methods preserve identifiers and remove missing values", {
   data <- data.frame(
     ID = c("F1", "F2", "F3"),

@@ -21,16 +21,17 @@ mod_05_downloadReport_ui <- function(id){
                  collapsible = TRUE,
                  collapsed = FALSE,
                  closable = FALSE,
-                 p("1. You can download the HTML report in this panel. Don't repeatedly click the download button. It will make the process even slower."),
-                 p("2. You may need to restart your PC if the report generation is stuck.")
+                 p("1. Generate and download a self-contained HTML report from this panel."),
+                 p("2. Report generation may take a few minutes. Click Generate Report once, then wait for the download button to appear."),
+                 p("3. If generation fails, restart the app session and try again.")
                  )
              ),
 
-      #(1) Materials & Methods =================================================
+      #(1) Materials and Methods ===============================================
       column(width = 5,
              box(width = 12,
                  inputId = "input_card",
-                 title = strong("Report Information Panel"),
+                 title = strong("Report Information"),
                  status = "primary",
                  solidHeader = TRUE,
                  collapsible = FALSE,
@@ -49,64 +50,40 @@ mod_05_downloadReport_ui <- function(id){
                  ),
              box(width = 12,
                  inputId = "input_card",
-                 title = strong("Materials & Methods Panel"),
+                 title = strong("Materials and Methods"),
                  status = "primary",
                  solidHeader = TRUE,
                  collapsible = FALSE,
                  collapsed = FALSE,
                  closable = FALSE,
                  radioButtons(inputId = ns("showIntro"),
-                              label = "1. Do you want to show introduction section in the report?",
+                              label = "1. Include the introduction in the report?",
                               choices = list("Yes" = TRUE, "No" = FALSE),
                               selected = TRUE
                               ),
                  radioButtons(inputId = ns("showMethods"),
-                              label = "2. Do you want to show materials and methods section in the report?",
+                              label = "2. Include Materials and Methods in the report?",
                               choices = list("Yes" = TRUE, "No" = FALSE),
                               selected = FALSE
                               ),
-                 selectInput(inputId = ns("samplePrep"),
-                             label = "2.1 Select Sample Preparation Method",
-                             choices = list("None",
-                                            "Method 1",
-                                            "Method 2",
-                                            "Method 3"),
-                             selected = "None",
-                             multiple = FALSE
-                             ),
-                 textInput(inputId = ns("samplePrepManual"),
-                           label = "(or) Use Another Sample Preparation Method",
-                           value = "",
-                           placeholder = "You can also paste your sample preparation method here"
-                           ),
-                 selectInput(inputId = ns("instrument"),
-                             label = "2.2 Select Sample Analysis Method",
-                             choices = list("None",
-                                            "Method 1",
-                                            "Method 2",
-                                            "Method 3"),
-                             selected = "None",
-                             multiple = FALSE
-                             ),
-                 textInput(inputId = ns("instrumentManual"),
-                           label = "(or) Use Another Sample Analysis Method",
-                           value = "",
-                           placeholder = "You can also paste your sample analysis method here"
-                           ),
-                 selectInput(inputId = ns("dataProcess"),
-                             label = "2.3 Select Data Processing Method",
-                             choices = list("None",
-                                            "Method 1",
-                                            "Method 2",
-                                            "Method 3"),
-                             selected = "None",
-                             multiple = FALSE
-                             ),
-                 textInput(inputId = ns("dataProcessManual"),
-                           label = "(or) Use Another Data Processing Method",
-                           value = "",
-                           placeholder = "You can also paste your data processing method here"
-                           ),
+                 textAreaInput(inputId = ns("samplePrep"),
+                               label = "2.1 Sample-preparation method",
+                               value = "",
+                               rows = 5,
+                               placeholder = "Enter or paste the sample-preparation method."
+                               ),
+                 textAreaInput(inputId = ns("sampleAnalysis"),
+                               label = "2.2 Sample-analysis method",
+                               value = "",
+                               rows = 5,
+                               placeholder = "Enter or paste the sample-analysis method."
+                               ),
+                 textAreaInput(inputId = ns("dataProcessing"),
+                               label = "2.3 Data-processing method",
+                               value = "",
+                               rows = 5,
+                               placeholder = "Enter or paste the data-processing method."
+                               ),
                  actionButton(inputId = ns("getReport"),
                               label = "Generate Report",
                               icon = icon("paper-plane"),
@@ -126,7 +103,7 @@ mod_05_downloadReport_ui <- function(id){
                  collapsed = FALSE,
                  closable = FALSE,
                  p(style = "color:#b2182b;", shiny::icon("bell"), strong("Note: ")),
-                 p(style = "color:#b2182b;", "It may take few minutes to download the reuslt. Don't repeatedly click the download button."),
+                 p(style = "color:#b2182b;", "Generating the report may take a few minutes. Click the download button only once."),
                  uiOutput(ns("report_button"))
                  )
              )
@@ -158,7 +135,9 @@ mod_05_downloadReport_server <- function(id, sfData, inputData, resultList) {
         authorName = input$authorName,
         showIntro = input$showIntro,
         showMethods = input$showMethods,
-        mySamplePrep = getSamplePrep(input$samplePrep)
+        mySamplePrep = input$samplePrep,
+        mySampleAnalysis = input$sampleAnalysis,
+        myDataProcessing = input$dataProcessing
       )
     })
 

@@ -22,11 +22,8 @@ mod_08_lcTool_ui <- function(id){
                collapsed = FALSE,
                closable = FALSE,
                p("1. This widget is designed to calculate the void volume and equilibration time."),
-               p("2. The void volumn is calculated with this formula:", strong("Pi x r^2 × L × pore volume"),
-                 "in which pi is 3.14, r is radius, L is the length of the column, and pore volume is 0.7 here as
-                 LC column contains packed material, which occupies 65% to 70% of the column volume."),
-               p("3. It typically require between 10 and 20 column volumes before the LC column is fully equilibrated and ready to use.
-                 The required equilibration time will therefore vary depending on the column volumes you choose."),
+               p("2. Void volume is calculated as", strong("π × r² × L × porosity"), ", where r is the column radius, L is the column length, and a porosity factor of 0.7 is used."),
+               p("3. Equilibration time is calculated from the selected number of column volumes and the LC flow rate. Choose the number of column volumes appropriate for your method."),
                p("4. Pay attention to the unit.")
                )
              ),
@@ -37,7 +34,7 @@ mod_08_lcTool_ui <- function(id){
              box(
                width = 12,
                inputId = "input_card",
-               title = strong("Calculate void Volume & Equilibration Time"),
+               title = strong("Calculate Void Volume and Equilibration Time"),
                status = "primary",
                solidHeader = FALSE,
                collapsible = FALSE,
@@ -66,7 +63,7 @@ mod_08_lcTool_ui <- function(id){
                             ),
 
                numericInput(inputId = ns("nColVolume"),
-                            label = "4. Please enter the number of column volum",
+                            label = "4. Enter the number of column volumes",
                             value = 10,
                             min = 0,
                             max = NA
@@ -86,7 +83,7 @@ mod_08_lcTool_ui <- function(id){
              box(
                width = 12,
                inputId = "report_card",
-               title = strong("Calculated Void Volume & Equilibration Time"),
+               title = strong("Calculated Void Volume and Equilibration Time"),
                status = "success",
                solidHeader = FALSE,
                collapsible = TRUE,
@@ -134,10 +131,10 @@ mod_08_lcTool_server <- function(id){
 
       ##(2) Calculate void volume ----------------------------------------------
       output$vmOutput <- renderText({
-        shiny::validate(need(idColumn() > 0, message = "Value of column inner diameter should be bigger than 0"))
-        shiny::validate(need(lenColumn() > 0, message = "Value of column length should be bigger than 0"))
-        shiny::validate(need(flowRate() >= 0, message = "LC flow rate cannot be negative value"))
-        shiny::validate(need(nColVolume() > 0, message = "Value of number of column volume should be bigger than 0"))
+        shiny::validate(need(idColumn() > 0, message = "Column inner diameter must be greater than 0."))
+        shiny::validate(need(lenColumn() > 0, message = "Column length must be greater than 0."))
+        shiny::validate(need(flowRate() >= 0, message = "LC flow rate cannot be negative."))
+        shiny::validate(need(nColVolume() > 0, message = "The number of column volumes must be greater than 0."))
 
         Vm <- round(0.7 * pi * (idColumn()/20)^2 * lenColumn()/10, 2) # cm unit
         Etime <- ifelse(flowRate() > 0, round(nColVolume() * Vm/flowRate(), 2), "unknown")

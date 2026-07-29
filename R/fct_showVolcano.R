@@ -21,10 +21,10 @@
 showVolcano <- function(result, compare_group, FC = 2, pValue = 0.05, interactive = TRUE) {
 
   #(1)check input
-  if(!is.numeric(FC)){stop("invalid calss of fold change: not numeric")}
-  if(!is.numeric(pValue)){stop("invalid calss of p value: not numeric")}
-  if(pValue > 1){stop("p value should between 0 and 1")}
-  if(FC < 1){stop("FC threshold should be at least 1")}
+  if(!is.numeric(FC)){stop("Fold-change threshold must be numeric.")}
+  if(!is.numeric(pValue)){stop("P-value threshold must be numeric.")}
+  if(pValue <= 0 || pValue > 1){stop("P-value threshold must be greater than 0 and no greater than 1.")}
+  if(FC < 1){stop("Fold-change threshold must be at least 1.")}
   ## suppress "no visible binding for global variable" notes in ggplot2
   fold_change <- p_value <- significant <- NULL
 

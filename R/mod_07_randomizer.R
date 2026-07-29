@@ -23,10 +23,9 @@ mod_07_randomizer_ui <- function(id){
                collapsible = TRUE,
                collapsed = FALSE,
                closable = FALSE,
-               p("1. This widget is designed to prepare LCMS injection sequence using a block randomization approach."),
-               p("2. Set the following parameters and click the", strong("Randomize"), "button, your injection sequence will be ready to download."),
-               p("3. If you are unsatistied with the generated sequence, you can click the", strong("Randomize"),
-                 "button to re-generate a new sequence file.")
+               p("1. This widget prepares an LC-MS injection sequence using block randomization."),
+               p("2. Set the parameters and click", strong("Randomize"), ". The injection sequence will then be ready to download."),
+               p("3. To generate a different sequence, click", strong("Randomize"), "again.")
                )
              ),
 
@@ -53,57 +52,57 @@ mod_07_randomizer_ui <- function(id){
                p(style = "color:#b2182b;", shiny::icon("bell"), strong("Note: ")),
                p(style = "color:#b2182b;", "1. Please provide the sample group and replicate information in the table above.
                  Please enter the replicate information first in the table to avoid any potential bugs. If you encounter any issues entering the
-                 information, please refresh the website and reinput the data."),
+                 information, refresh the page and re-enter the data."),
                p(style = "color:#b2182b;", "2. Blanks can be inserted at the start of the injection sequence and/or within the sequence after each quality control (QC)."),
                p(style = "color:#b2182b;", "3. QC will be inserted every N samples."),
-               p(style = "color:#b2182b;", "4. You can reserve certain positions for other purposes, such as an additional Blanks or QCs.
+               p(style = "color:#b2182b;", "4. You can reserve certain positions for other purposes, such as additional blanks or QCs.
                  These positions will not be used for regular sample placement."),
                sliderInput(inputId = ns("nBlank"),
-                           label = "Specify the No. of Blanks to add at the start of the injection",
+                           label = "Number of blanks at the start of the sequence",
                            min = 0,
                            max = 20,
                            value = 0,
                            step = 1
                            ),
                sliderInput(inputId = ns("nQC"),
-                           label = "Specify the frequency (every N samples) of QCs to insert within samples",
+                           label = "QC frequency (insert one QC every N samples)",
                            min = 0,
                            max = 20,
                            value = 0,
                            step = 1,
                            ),
                sliderInput(inputId = ns("nWithinBlank"),
-                           label = "Specify the No. of Blanks to add after each QC",
+                           label = "Number of blanks after each QC",
                            min = 0,
                            max = 20,
                            value = 0,
                            step = 1,
                            ),
                sliderInput(inputId = ns("nEmptyCell"),
-                           label = "Specify the No. of sample positions you want to reserve.",
+                           label = "Number of sample positions to reserve",
                            min = 0,
                            max = 10,
                            value = 0,
                            step = 1,
                            ),
-               p(strong("Illustration of a LC sample plate")),
+               p(strong("Illustration of an LC sample plate")),
                column(width = 12, img(src='www/img/lcPlate.png', align = "left", width = "100%")),
                numericInput(inputId = ns("plateRow"),
-                            label = "Please enter the row number of the sample plate",
+                            label = "Number of rows in the sample plate",
                             value = 6,
                             min = 1,
                             step = 1
                             ),
                numericInput(inputId = ns("plateCol"),
-                            label = "Please enter the row number of the sample plate",
+                            label = "Number of columns in the sample plate",
                             value = 8,
                             min = 1,
                             step = 1
                             ),
                selectInput(inputId = ns("plateIDType"),
                            label = "Please select the sample plate ID type",
-                           choices = list("plates are labeled by Letter, such as A, B, C" = "Letter",
-                                          "plates are lebeled by numbers, such as 1, 2, 3" = "Number"
+                           choices = list("Letters, such as A, B, C" = "Letter",
+                                          "Numbers, such as 1, 2, 3" = "Number"
                                           ),
                            selected = "Letter"
                            ),
@@ -132,7 +131,7 @@ mod_07_randomizer_ui <- function(id){
                collapsed = FALSE,
                closable = FALSE,
                p(style = "color:#b2182b;", shiny::icon("bell"), strong("Note: ")),
-               p(style = "color:#b2182b;", "For Obitrap-type sequence, you need to insert", strong("Bracket Type=4"), "in the first row of the download sequence file."),
+               p(style = "color:#b2182b;", "For an Orbitrap sequence, insert", strong("Bracket Type = 4"), "in the first row of the downloaded sequence file."),
                uiOutput(outputId = ns("downloadSeq")),
                hr(),
                DT::dataTableOutput(ns("randomizedList"))

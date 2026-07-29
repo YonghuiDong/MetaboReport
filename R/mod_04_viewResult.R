@@ -21,8 +21,8 @@ mod_04_viewResult_ui <- function(id){
                  collapsible = TRUE,
                  collapsed = FALSE,
                  closable = FALSE,
-                 p("1. Statistical analyses are perfromed in this panel. Tables and most figures are interactive so that you can better inspect your data and results."),
-                 p("2. You can customize the figures by changing the color, aspect ratio before downloading them with preferred format.")
+                 p("1. Perform statistical analyses and inspect the resulting tables and figures in this panel."),
+                 p("2. Customize figure colors and aspect ratios before downloading them in your preferred format.")
                  )
              ),
 
@@ -40,8 +40,8 @@ mod_04_viewResult_ui <- function(id){
                              label = "1. What do you want to do?",
                              choices = c("Compare two unpaired groups" = "tTest",
                                          "Compare two paired groups" = "ptTest",
-                                         "Compare more than two unmatched groups" = "anovaHSD",
-                                         "Compare more than two matched groups" = "anovaRM"
+                                         "Compare more than two unpaired groups" = "anovaHSD",
+                                         "Compare more than two paired groups" = "anovaRM"
                                          ),
                              selected = "anovaHSD",
                              multiple = FALSE
@@ -61,10 +61,10 @@ mod_04_viewResult_ui <- function(id){
                               selected = 0
                               ),
                  p(style = "color:#C70039;", shiny::icon("bell"), strong("Notes:")),
-                 p(style = "color:#C70039;", "1. Features with p-values < the threshold in all the sample groups will be removed"),
-                 p(style = "color:#C70039;", "2. This step is not applied to PCA, OPLS-DA or Volcano plot"),
+                 p(style = "color:#C70039;", "1. Only features with at least one p-value below the threshold are retained in the statistics table."),
+                 p(style = "color:#C70039;", "2. This filter is not applied to PCA, OPLS-DA, or the volcano plot."),
                  sliderInput(inputId = ns("SigP"),
-                             label = "If [Yes]: enter p-value threshold",
+                             label = "If Yes, enter the p-value threshold",
                              value = 0.05,
                              min = 0,
                              max = 0.1
@@ -95,7 +95,7 @@ mod_04_viewResult_ui <- function(id){
                  fluidRow(width = 12,
                           column(width = 12,
                                  varSelectInput(inputId = ns("StatGroup"),
-                                                label = "Select MetaData (Sample Groups) for statistics",
+                                                label = "Select metadata (sample groups) for statistics",
                                                 data = ""
                                                 )
                                  ),
@@ -115,13 +115,13 @@ mod_04_viewResult_ui <- function(id){
                  collapsed = TRUE,
                  closable = FALSE,
                  varSelectInput(inputId = ns("PCAGroup"),
-                                label = "1. Select MetaData (Sample Groups) for Sample Coloring",
+                                label = "1. Select metadata (sample groups) for sample coloring",
                                 data = ""
                                 ),
                  fluidRow(width = 12,
                           column(width = 6,
                                  selectInput(inputId = ns("PCAX"),
-                                             label = "Which PC in X-axis?",
+                                             label = "Which PC on the x-axis?",
                                              choices = list(1, 2, 3, 4),
                                              selected = 1,
                                              multiple = FALSE
@@ -129,7 +129,7 @@ mod_04_viewResult_ui <- function(id){
                                  ),
                           column(width = 6,
                                  selectInput(inputId = ns("PCAY"),
-                                             label = "Which PC in Y-axis?",
+                                             label = "Which PC on the y-axis?",
                                              choices = list(1, 2, 3, 4),
                                              selected = 2,
                                              multiple = FALSE
@@ -138,13 +138,17 @@ mod_04_viewResult_ui <- function(id){
                           column(width = 12,
                                  radioButtons(inputId = ns("PCAFrame"),
                                               label = "Add frame for group?",
-                                              choices = list("none", "polygon", "norm"),
+                                              choices = c(
+                                                "None" = "none",
+                                                "Convex hull" = "polygon",
+                                                "95% confidence ellipse" = "norm"
+                                              ),
                                               selected = "none"
                                               )
                                  ),
                           column(width = 6,
                                  selectInput(inputId = ns("PCAColor"),
-                                             label = "Color palette?",
+                                             label = "Color palette",
                                              choices = plot_palette_choices,
                                              selected = "Default"
                                              )
@@ -182,25 +186,25 @@ mod_04_viewResult_ui <- function(id){
                  collapsed = TRUE,
                  closable = FALSE,
                  varSelectInput(inputId = ns("OPLSDAGroup"),
-                                label = "1. Select MetaData (Sample Groups)",
+                                label = "1. Select metadata (sample groups)",
                                 data = ""
                                 ),
                  fluidRow(width = 12,
                           column(width = 6,
                                  selectInput(inputId = ns("OPLSDALevel1"),
-                                             label = "2. Select the first sample group level",
+                                             label = "2.1 Select the first sample group level",
                                              choices = ""
                                              )
                                  ),
                           column(width = 6,
                                  selectInput(inputId = ns("OPLSDALevel2"),
-                                             label = "2. Select the second sample group level",
+                                             label = "2.2 Select the second sample group level",
                                              choices = ""
                                              )
                                  ),
                           column(width = 6,
                                  selectInput(inputId = ns("OPLSDAColor"),
-                                             label = "Color palette?",
+                                             label = "Color palette",
                                              choices = plot_palette_choices,
                                              selected = "Default"
                                              )
@@ -237,7 +241,7 @@ mod_04_viewResult_ui <- function(id){
                  collapsed = TRUE,
                  closable = FALSE,
                  varSelectInput(inputId = ns("HMGroup"),
-                                label = "1. Select MetaData (Sample Groups) for Sample Coloring",
+                                label = "1. Select metadata (sample groups) for sample coloring",
                                 data = ""
                                 ),
                  fluidRow(width = 12,
@@ -287,7 +291,7 @@ mod_04_viewResult_ui <- function(id){
                                  ),
                           column(width = 6,
                                  radioButtons(inputId = ns("HMQCFilter"),
-                                              label = "Do you want to include QC samples (if exist)?",
+                                              label = "Include QC samples (if present)?",
                                               choices = c("Yes" = 1, "No" = 0),
                                               selected = 1
                                               )
@@ -327,13 +331,13 @@ mod_04_viewResult_ui <- function(id){
                  fluidRow(width = 12,
                           column(width = 6,
                                  selectInput(inputId = ns("VCLevel1"),
-                                             label = "1. Select the first sample group level",
+                                             label = "1.1 Select the first sample group level",
                                              choices = ""
                                              )
                                  ),
                           column(width = 6,
                                  selectInput(inputId = ns("VCLevel2"),
-                                             label = "1. Select the second sample group level",
+                                             label = "1.2 Select the second sample group level",
                                              choices = ""
                                              )
                                  ),
@@ -386,7 +390,7 @@ mod_04_viewResult_ui <- function(id){
                  fluidRow(width = 12,
                           column(width = 6,
                                  varSelectInput(inputId = ns("KMGroup"),
-                                                label = "1. Select MetaData (Sample Groups)",
+                                                label = "1. Select metadata (sample groups)",
                                                 data = ""
                                                 )
                                  ),
@@ -446,13 +450,13 @@ mod_04_viewResult_ui <- function(id){
                fluidRow(width = 12,
                         column(width = 12,
                                varSelectInput(inputId = ns("BPGroup"),
-                                              label = "1. Select MetaData (Sample Groups)",
+                                              label = "1. Select metadata (sample groups)",
                                               data = ""
                                               )
                                ),
                         column(width = 12,
                                varSelectizeInput(inputId = ns("BPMetabolite"),
-                                                 label = "2. Select Metabolites",
+                                                 label = "2. Select a metabolite",
                                                  data = ""
                                                  )
                                ),
@@ -465,14 +469,14 @@ mod_04_viewResult_ui <- function(id){
                                ),
                         column(width = 6,
                                selectInput(inputId = ns("BPPlotType"),
-                                           label = "4. Box plot or Violin plot?",
+                                           label = "4. Choose plot type",
                                            choices = list("Bar plot", "Box plot", "Violin plot"),
                                            selected = "Bar plot"
                                            )
                                ),
                         column(width = 6,
                                selectInput(inputId = ns("BPPlotColor"),
-                                           label = "Color palette?",
+                                           label = "Color palette",
                                            choices = plot_palette_choices,
                                            selected = "Default"
                                            )
@@ -515,7 +519,7 @@ mod_04_viewResult_ui <- function(id){
                fluidRow(width = 12,
                         column(width = 12,
                                varSelectizeInput(inputId = ns("CAMetabolite"),
-                                                 label = "1. Select Metabolites",
+                                                 label = "1. Select a metabolite",
                                                  data = ""
                                                  )
                                ),
@@ -909,7 +913,7 @@ mod_04_viewResult_server <- function(id, sfData){
       shiny::req(statTable())
       shiny::validate(
         need(input$VCLevel1 != input$VCLevel2, message = "Please select two different groups."),
-        need(input$VCPvalue <= 1 & input$VCPvalue > 0, message = "P-value should between 0 and 1."),
+        need(input$VCPvalue <= 1 & input$VCPvalue > 0, message = "P-value must be greater than 0 and no greater than 1."),
         need(input$VCFC >= 1, message = "Fold change threshold should be at least 1.")
       )
       p <- showVolcano(result = statTable(),
@@ -926,7 +930,7 @@ mod_04_viewResult_server <- function(id, sfData){
       shiny::validate(
         need(!is.null(sfData$clean), message = "Input data not found"),
         need(!is.null(sfData$group), message = "Meta data not found"),
-        need(input$VCPvalue <= 1 & input$VCPvalue > 0, message = "P-value should between 0 and 1."),
+        need(input$VCPvalue <= 1 & input$VCPvalue > 0, message = "P-value must be greater than 0 and no greater than 1."),
         need(input$VCFC >= 1, message = "Fold change threshold should be at least 1."),
         need(nrow(dataGlobal3PCA()) == nrow(sfData$group), message = "Please click Start button to reperform statistics after deleting or recovering samples.")
       )
@@ -1107,7 +1111,7 @@ mod_04_viewResult_server <- function(id, sfData){
 
     CAPlot <- reactive({
       shiny::req(PCC())
-      shiny::validate(need(input$CAThreshold >=0 & input$CAThreshold < 1, message = "Absolute correlation threshold value should between 0 and 1."))
+      shiny::validate(need(input$CAThreshold >= 0 & input$CAThreshold < 1, message = "The absolute correlation threshold must be at least 0 and less than 1."))
       showCAplot(PCC = PCC(), Metabolite = as.character(input$CAMetabolite), Threshold = input$CAThreshold)
     })
 

@@ -21,12 +21,10 @@ mod_09_msTool_ui <- function(id){
                collapsible = TRUE,
                collapsed = FALSE,
                closable = FALSE,
-               p("1. This widget is designed to calculate m/z values, and identidy mass based on m/z values."),
-               p("2. You have the option to either enter a single value or upload a list of values. If uploading
-                 a list, please ensure that the correct required names are used."),
-               p("3. The result can be downloaded in csv format."),
-               p("4. Note that when using this module for the first time, it will take a bit longer to load the database.
-                 However, subsequent calculations will be significantly faster.")
+               p("1. Use this widget to calculate m/z values or find candidate compounds from measured m/z values."),
+               p("2. Enter a single value or upload a list using the required column name shown below."),
+               p("3. Database matches are putative annotations; accurate mass alone does not confirm metabolite identity."),
+               p("4. Results can be downloaded as CSV files. The first database search may take longer while the database loads.")
                )
              ),
 
@@ -43,18 +41,18 @@ mod_09_msTool_ui <- function(id){
                collapsed = FALSE,
                closable = FALSE,
                textInput(inputId = ns("formula1"),
-                         label = "1. Input formula",
+                         label = "1. Enter a molecular formula",
                          value = NULL,
                          placeholder = "e.g., C7H6O"
                          ),
                fileInput(inputId = ns("formula2"),
-                         label = "1. (alternatively) Upload a list of formulas:",
+                         label = "1. Alternatively, upload a list of formulas",
                          multiple = FALSE,
-                         placeholder = "should contain a column named Formula",
+                         placeholder = "Must contain a column named Formula.",
                          accept = c(".csv", ".xls", ".xlsx")
                          ),
                numericInput(inputId = ns("nCharge"),
-                            label = "Input number of charge",
+                            label = "Enter charge state",
                             value = 1,
                             min = 1,
                             max = NA,
@@ -83,25 +81,25 @@ mod_09_msTool_ui <- function(id){
              box(
                width = 12,
                inputId = "input_card",
-               title = strong("Identify m/z Values from HMDB"),
+               title = strong("Find HMDB Candidates by m/z"),
                status = "primary",
                solidHeader = FALSE,
                collapsible = FALSE,
                collapsed = FALSE,
                closable = FALSE,
                textInput(inputId = ns("mz1"),
-                         label = "1. Input mz value",
+                         label = "1. Enter an m/z value",
                          value = "",
                          placeholder = "e.g., 133.014"
                          ),
                fileInput(inputId = ns("mz2"),
-                         label = "1. (alternatively) Upload a list of mz values:",
+                         label = "1. Alternatively, upload a list of m/z values",
                          multiple = FALSE,
-                         placeholder = "should contain a column named mz",
+                         placeholder = "Must contain a column named mz.",
                          accept = c(".csv", ".xls", ".xlsx")
                          ),
                numericInput(inputId = ns("ppmTolerance"),
-                            label = "Input mass accuracy tolerance (ppm)",
+                            label = "Enter mass-accuracy tolerance (ppm)",
                             value = 5,
                             min = 0,
                             max = NA
@@ -124,25 +122,25 @@ mod_09_msTool_ui <- function(id){
              box(
                width = 12,
                inputId = "input_card",
-               title = strong("Identify Noise Peaks"),
+               title = strong("Match Known Noise Peaks"),
                status = "primary",
                solidHeader = FALSE,
                collapsible = FALSE,
                collapsed = FALSE,
                closable = FALSE,
                textInput(inputId = ns("noise1"),
-                         label = "1. Input noise mz value",
+                         label = "1. Enter a noise-peak m/z value",
                          value = "",
                          placeholder = "e.g., 33.0335"
                          ),
                fileInput(inputId = ns("noise2"),
-                         label = "1. (alternatively) Upload a list of noise mz values:",
+                         label = "1. Alternatively, upload a list of noise-peak m/z values",
                          multiple = FALSE,
-                         placeholder = "should contain a column named mz",
+                         placeholder = "Must contain a column named mz.",
                          accept = c(".csv", ".xls", ".xlsx")
                          ),
                numericInput(inputId = ns("ppmTolerance2"),
-                            label = "Input mass accuracy tolerance (ppm)",
+                            label = "Enter mass-accuracy tolerance (ppm)",
                             value = 5,
                             min = 0,
                             max = NA
@@ -181,7 +179,7 @@ mod_09_msTool_ui <- function(id){
              box(
                width = 12,
                inputId = "report_card",
-               title = strong("Identify m/z"),
+               title = strong("HMDB Candidate Matches"),
                status = "success",
                solidHeader = FALSE,
                collapsible = TRUE,
@@ -273,9 +271,9 @@ mod_09_msTool_server <- function(id){
 
       ###(1.3) Get result ------------------------------------------------------
       mzValue <- reactive({
-        shiny::validate(need(formula != "", message = "No formula found"))
-        shiny::validate(need(nCharge() > 0, message = "number of charge should be positive value"))
-        shiny::validate(need(!is.null(ionMode1()), message = "Please select ion mode"))
+        shiny::validate(need(formula != "", message = "No molecular formula found."))
+        shiny::validate(need(nCharge() > 0, message = "Charge state must be positive."))
+        shiny::validate(need(!is.null(ionMode1()), message = "Select an ion mode."))
         shiny::withProgress(
           message = "It takes time to load the database when you use this module for the first time ",
           detail = "Be patient...",
@@ -345,9 +343,9 @@ mod_09_msTool_server <- function(id){
 
       ##(1.4) Get Result -------------------------------------------------------
       idList <- reactive({
-        shiny::validate(need(mzList != "", message = "No mz value found"))
-        shiny::validate(need(ppmTolerance() > 0, message = "Mass tolerance (ppm) should be positive value"))
-        shiny::validate(need(!is.null(ionMode2()), message = "Please select ion mode"))
+        shiny::validate(need(mzList != "", message = "No m/z value found."))
+        shiny::validate(need(ppmTolerance() > 0, message = "Mass tolerance must be positive."))
+        shiny::validate(need(!is.null(ionMode2()), message = "Select an ion mode."))
         shiny::withProgress(
           message = "Searching in HMDB database ",
           detail = "Be patient...",
@@ -419,11 +417,11 @@ mod_09_msTool_server <- function(id){
       #(2) Result ==============================================================
       ##(1) Get Result----------------------------------------------------------
       getNoiseList <- reactive({
-        shiny::validate(need(noiseList != "", message = "No mz value found"))
-        shiny::validate(need(ppmTolerance2() > 0, message = "Mass tolerance (ppm) should be positive value"))
-        shiny::validate(need(!is.null(ionMode3()), message = "Please select ion mode"))
+        shiny::validate(need(noiseList != "", message = "No m/z value found."))
+        shiny::validate(need(ppmTolerance2() > 0, message = "Mass tolerance must be positive."))
+        shiny::validate(need(!is.null(ionMode3()), message = "Select an ion mode."))
         shiny::withProgress(
-          message = "Identifying contanminates",
+          message = "Matching known contaminants",
           detail = "Be patient...",
           value = 0.4,
           {

@@ -22,8 +22,8 @@ mod_02_uploadData_ui <- function(id){
                collapsible = TRUE,
                collapsed = FALSE,
                closable = FALSE,
-               p("1. If your data table was prepared using Compound Discoverer, choose the", strong("Compound Discoverer"), "format; otherwise, select", strong("Other"), "format."),
-               p("2. If your feature and metadata information are in separate tables, please upload both.")
+               p("1. If your data table was prepared using Compound Discoverer, choose the", strong("Compound Discoverer"), "format; otherwise, select", strong("Other format"), "."),
+               p("2. If your feature and metadata are stored in separate tables, upload both files.")
                )
       ),
 
@@ -33,7 +33,7 @@ mod_02_uploadData_ui <- function(id){
              box(
                width = 12,
                inputId = "input_card",
-               title = strong("Data Input Panel"),
+               title = strong("Data Input"),
                status = "primary",
                solidHeader = TRUE,
                collapsible = FALSE,
@@ -41,27 +41,27 @@ mod_02_uploadData_ui <- function(id){
                closable = FALSE,
                selectInput(inputId = ns("fileFormat"),
                            label = "1. Select file format",
-                           choices = list("Compound Discoverer (CD)" = "CD", "Other Format (DataFrame)" = "Other"),
+                           choices = list("Compound Discoverer (CD)" = "CD", "Other format" = "Other"),
                            selected = "CD",
                            multiple = FALSE
                            ),
                fileInput(inputId = ns("rawFile"),
-                         label = "2. Upload data table (or feature table):",
+                         label = "2. Upload data table (or feature table)",
                          multiple = FALSE,
-                         placeholder = "accept csv, xls or xlsx format",
+                         placeholder = "Accepts CSV, XLS, or XLSX files.",
                          accept = c(".csv", ".xls", ".xlsx")
                          ),
                p(style = "color:#b2182b;", shiny::icon("bell"), strong("Note: ")),
                p(style = "color:#b2182b;", "1. If there is no metadata in the file header, please upload the metadata table below."),
                p(style = "color:#b2182b;", "2. Refer to the Home page for detailed data table preparation."),
                fileInput(inputId = ns("inputMeta"),
-                         label = "2. (Optional) Upload sample metadata table:",
+                         label = "3. (Optional) Upload sample metadata table",
                          multiple = FALSE,
-                         placeholder = "accept csv, xls or xlsx format",
+                         placeholder = "Accepts CSV, XLS, or XLSX files.",
                          accept = c(".csv", ".xls", ".xlsx")
                          ),
                radioButtons(inputId = ns("showExample"),
-                            label = "Do you want to play with demo data?",
+                            label = "Use the demo data?",
                             choices = c("Yes" = "Yes", "No" = "No"),
                             selected = "No"
                             ),
@@ -88,8 +88,8 @@ mod_02_uploadData_ui <- function(id){
                p(style = "color:#2166ac;", "1. Proceed with your analysis without removing any samples."),
                p(style = "color:#2166ac;", "2. If you identify any outliers, come back and remove them."),
                uiOutput(outputId = ns("selectColumn")),
-               column(width = 6, actionButton(inputId = ns("removeCol"), label = "Remove")),
-               column(width = 6, actionButton(inputId = ns("undoCol"), label = "Undo"))
+               column(width = 6, actionButton(inputId = ns("removeCol"), label = "Remove Selected Samples")),
+               column(width = 6, actionButton(inputId = ns("undoCol"), label = "Restore Samples"))
                )
       ),
 
@@ -97,7 +97,7 @@ mod_02_uploadData_ui <- function(id){
       column(width = 8,
              box(width = 12,
                  inputId = "RawData_card",
-                 title = strong("Raw Data Panel"),
+                 title = strong("Raw Data"),
                  status = "success",
                  solidHeader = FALSE,
                  collapsible = TRUE,
@@ -107,7 +107,7 @@ mod_02_uploadData_ui <- function(id){
                  ),
              box(width = 12,
                  inputId = "meta_card",
-                 title = strong("Metadata Panel"),
+                 title = strong("Metadata"),
                  status = "success",
                  solidHeader = FALSE,
                  collapsible = TRUE,
@@ -118,7 +118,7 @@ mod_02_uploadData_ui <- function(id){
                  ),
              box(width = 12,
                  inputId = "sample_card",
-                 title = strong("Processed Data Panel"),
+                 title = strong("Processed Data"),
                  status = "success",
                  solidHeader = FALSE,
                  collapsible = TRUE,

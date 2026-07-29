@@ -18,6 +18,8 @@ params:
   VCGroup: NA
   myStat: NA
   mySamplePrep: NA
+  mySampleAnalysis: NA
+  myDataProcessing: NA
   myPCAPlot: NA
   myHMPlot: NA
   dataGlobal3Transform: NA
@@ -58,6 +60,8 @@ VCGroup <- params$VCGroup
 myStat <- params$myStat
 sampleGroup <- params$sampleGroup
 mySamplePrep <- params$mySamplePrep
+mySampleAnalysis <- params$mySampleAnalysis
+myDataProcessing <- params$myDataProcessing
 dataGlobal3Transform <- params$dataGlobal3Transform
 BPGroup <- params$BPGroup
 
@@ -85,31 +89,29 @@ Metabolomics involves the comprehensive analysis of low-molecular-weight metabol
 
 `Semi-targeted Assay`: (or frequently referred to as metabolic profiling). It acts as an intermediate between untargeted and targeted analyses, where typically hundreds of metabolites are targeted, whose chemical identity is known prior to data acquisition. Semi-quantification information is reported in this type of approach.
 
-This report is an overview of your data analysis results. Brief explanations are provided in each section to help you understand the report. Below are few tips on how to use this report.
+This report provides an overview of your data-analysis results. Brief explanations in each section help with interpretation. A few usage tips follow.
 
 > <span style = "color : #FF8300">**Tips:**</span>
 >
-> (1) Most figures in this report are interative, which means you can zoom and pan the figures, and hover over them to get more detailed information. Don't download figures from this report, and use them for publication purpose. The figure resolution is too low (72 dpi).
+> (1) Tables and selected figures are interactive, allowing you to search, zoom, pan, or inspect details. Other figures are static to ensure compatibility in a self-contained report.
 >
-> (2) High resolution (600 dpi) static figures are provided along with this report. You can also download them in `Statistics` tab if you are using **MetaboReport** software by yourself to generate this report. 
+> (2) Publication-quality static figures can be downloaded at 600 dpi from the `Statistics` page in **MetaboReport**.
 >
-> (3) If you want to perform additional statistics and/or re-analyse you data by yourself, you can use either Table 1 (raw data) or Table 2 (data with different statistical information). You can click `Download` button above the table to download it in **cvs** or **excel** format.
+> (3) To perform additional analyses, use the download controls above the statistical tables to export data in CSV or Excel format.
 ```
 
-```{asis, echo = params$showMethods}
-# Materials and Methods
+```{r}
+#| label = methods,
+#| echo = FALSE,
+#| results = 'asis'
 
-> <span style = "color : #FF8300">**Note:**</span>
-> 
-> (1) If Materials and Methods section is missing (or blank), please ask your collaborators. 
->
-> (2) To avoid plagiarism, please do not copy-paste this whole section in your publication. 
-
-## Sample Preparation Method
-
-`r mySamplePrep` 
-
-## Data Analysis Method
+if (isTRUE(params$showMethods)) {
+  cat(format_report_methods(
+    sample_preparation = mySamplePrep,
+    sample_analysis = mySampleAnalysis,
+    data_processing = myDataProcessing
+  ))
+}
 ```
 
 # Results
@@ -120,7 +122,7 @@ This report is an overview of your data analysis results. Brief explanations are
 > 
 > If your project does not contain QC samples, you can skip this section.
 
-Robust and reproducible data is essential to ensure high-quality analytical results, and is particularly important for large-scale metabolomics studies where detector sensitivity drifts, retention time and mass accuracy shifts frequently occur. Therefore, raw data need to be inspected before data processing to detect measurement bias and verify system consistency [2].
+Robust and reproducible data are essential for high-quality analytical results. This is particularly important in large-scale metabolomics studies, where detector-sensitivity drift and shifts in retention time or mass accuracy may occur. Raw data should therefore be inspected before processing to detect measurement bias and assess system consistency [2].
 
 The use of quality control (QC) is now routine to monitor, evaluate and correct system variations in metabolomics studies. Different types of QC samples are used in metabolomics, such as pooled QC samples, reference materials, standard reference materials and long term reference (LTR) samples.
 
@@ -128,7 +130,7 @@ The use of quality control (QC) is now routine to monitor, evaluate and correct 
 
 A rapid systematic check of data quality can be made by performing principal components analysis (PCA) on the complete data set (For explanation of PCA, please refer to **section 3.2.1**). By plotting the first two principal components scores, and labeling the data points as either QC samples or biological samples, the difference in multivariate dispersion can be visually assessed. 
 
-Ideally, QC samples should be clustered tightly in comparison to the total variance in the projection. If you used `pooled QC samples` in your study, the QCs should cluster at the center the PCA scores plot. Any deviation from the origin is usually due to unavoidable pipetting errors or sample weight discrepancies, or when the pooled QC is not generated from sub-aliquots of all the biological test samples. 
+Ideally, QC samples should cluster tightly relative to the total variance in the projection. If pooled QC samples were used, they should generally cluster near the center of the PCA score plot. Deviations may reflect sample-preparation or analytical variation, or a pooled QC that does not represent all biological samples.
 
 As long as the QCs cluster tightly, relative to the observed dispersion of biological samples, then these data can be deemed as of high quality [1].
 
@@ -146,13 +148,13 @@ params$myPCAPlot
 
 ### Comprehensive QC Report
 
-In addition, you may receive an HTML format QC report. It was generated using R package **RawHummus**, which was designed for quick and comprehensive evaluation of the metabolomics data quality based on QC samples. `RawHummus` adopts 12 quality metrics which are closely related to liquid chromatography (LC) peak shape, retention time (RT), mass accuracy, detector sensitivity and fragmentation to to comprehensively evaluate the raw data quality [2].  
+You may also receive an HTML QC report generated with the R package **RawHummus**, which evaluates metabolomics data quality using QC samples. `RawHummus` uses 12 quality metrics related to liquid chromatography (LC) peak shape, retention time (RT), mass accuracy, detector sensitivity, and fragmentation [2].
 
 > <span style = "color : #FF8300">**Note:**</span>
 > 
 > Detailed evaluation of the data quality can be found in the RawHummus report. 
 >
-> This RawHummus report can be direcrly used as a supplementary metarial in your publication.
+> The RawHummus report may be suitable as supplementary material, subject to journal requirements.
 >
 > Please cite RawHummus publication in your manuscript [2].
 
@@ -161,9 +163,9 @@ In addition, you may receive an HTML format QC report. It was generated using R 
 
 ### PCA
 
-Principal Component Analysis (PCA) is an unsupervised data analysis method, which transforms a set of correlated variables into a set of linearly uncorrelated variables. The uncorrelated variables are ordered in such a way that the first one accounts for as much of the variability in the data as possible and each succeeding one has the highest variance possible in the remaining variables. These ordered uncorrelated variables are called `principle components`. By discarding low-variance variables, PCA helps reduce data dimension and visualize the data.
+Principal component analysis (PCA) is an unsupervised method that transforms correlated variables into linearly uncorrelated variables called `principal components`. The first component explains as much variation as possible, and each subsequent component explains the greatest remaining variation. PCA helps reduce dimensionality and visualize the structure of the data.
 
-The PCA scores represent the new location of the samples in each principal component. A typical way to look at these is to plot the scores values in two dimensions, corresponding to pairs of components (usually PC1 vs PC2). Each point in a scores plot therefore represents a sample, with samples close together being more similar to each other, and those further apart being more dissimilar. By coloring by sample type, we can check, (i) the consistency of the QC samples (as discussed above in section **3.1.1**), and (ii) the presence of any sample outliers (any samples which are very different to the others).
+PCA scores describe the position of each sample along the principal components. Scores are commonly plotted in two dimensions, usually PC1 versus PC2. Each point represents a sample: nearby samples have more similar multivariate profiles, whereas distant samples are more dissimilar. Coloring points by sample type helps assess QC consistency and identify potential sample outliers.
 
 
 ```{r}
@@ -178,11 +180,11 @@ params$myPCAPlot
 ```
 > <span style = "color : #FF8300">**Note:**</span>
 > 
-> The PCA score plot is identifical as shown in section 3.1.1. The plot in section 3.1.1 is mainly used for data quanlity check, while here it is used to get an overview of the data and detect any sample outliers.
+> This is the same PCA score plot shown in the Quality Control section. Here it provides an overview of the data structure and helps identify potential outliers.
 
 ### Clustered Heatmap
 
-A clustered heatmap is a representation where values are represented on a color scale. One can cluster samples and mass features to identify groups of mass features that show a coordinated behavior.The rows of the heatmap below represent samples, and the columns represent mass features. 
+A clustered heatmap represents values on a color scale. Clustering samples and mass features can reveal groups with coordinated patterns. The rows of the heatmap below represent samples, and the columns represent mass features.
 
 
 ```{r}
@@ -198,7 +200,7 @@ params$myHMPlot
 
 > <span style = "color : #FF8300">**Note:**</span>
 > 
-> Depending on the parameter settings in the **MetaboReport** data analysis work, heatmap can be made from either all the mass features detected in the samples or only statistically significant mass features.
+> Depending on the settings used in the **MetaboReport** workflow, the heatmap may include all detected mass features or only statistically significant features.
 > 
 > 1. Heatmap constructed with all the mass features (or metabolites) gives an overview of the data structure.
 > 
@@ -299,21 +301,21 @@ DT::datatable(myStat,
 
 > <span style = "color : #FF8300">**How to interpret Table 1?**</span>
 >
-> **(1) Parameters in Table 1 **
+> **(1) Parameters in Table 1**
 >
 > `Fold_X_vs_Y`: Fold change (FC) between Group X and Y. FC is a measure describing how much a metabolite (or mass feature) changes between Group X and Y. It is defined as the ratio between X and Y, i.e., X/Y.
 >
 > `AdjPvalue_X_vs_Y`: Adjusted P-value between Group X and Y. The adjusted p-value gives information on statistical significance between Group X and Y. 
 >
-> `VIP_X_vs_Y`: Variable importance in projection between Group X and Y. It is a metric produced by Partial Least-Squares Discriminant Analysis (OPLS-DA). (for more information on OPLS-DA can be found in Figure 3).
+> `VIP_X_vs_Y`: Variable importance in projection between Group X and Y. This metric is derived from the OPLS-DA model. See the OPLS-DA section for details.
 >
 > **(2) How to perform feature selection?**
 > 
 > In metabolomics, feature selection is closely related to putative biomarker assessment, i.e., finding metabolites that are most relevant in discriminating group X and Y (for instance, wild type and mutant). 
 > 
-> You can use a multi-factor approach (i.e., `FC`, `adjusted p-value`, and `VIP`) to select potential biomarkers in your study based on the statistical results in Table 2. 
+> You can combine `FC`, adjusted p-value, and `VIP` to select differential-feature candidates from the statistical results in Table 1.
 > 
-> Our suggested values are: mass features with adjusted p-value < 0.05 and VIP > 1 are considered as statistically significantly different, and FC >= 2 as increase and FC <= 0.05 as decrease. See **Table 2** below.
+> The summary below uses adjusted p-value < 0.05 and VIP > 1, with FC >= 2 classified as increased and FC <= 0.5 classified as decreased.
 
 --------------------------------------------------------------------------------
 
@@ -323,7 +325,7 @@ DT::datatable(myStat,
 
 The following criteria are used to select statistically significantly different mass features (or metabolites):
 
-The mass features with adjusted **p-value < 0.05** and **VIP > 1** are considered as statistically significantly different, and **FC >= 2** as increase and **FC <= 0.05** as decrease.
+Mass features with adjusted **p-value < 0.05** and **VIP > 1** are classified as statistically significant; **FC >= 2** indicates an increase and **FC <= 0.5** indicates a decrease.
 
 ```{r}
 #| label = summary, 
@@ -385,7 +387,7 @@ DT::datatable(statSummary,
                )
 ```
 
-Below you can find the detailed information of the differential mass features in each compared groups.
+Detailed information for differential mass features is shown for each group comparison below.
 
 
 ```{r}
@@ -436,15 +438,13 @@ for(i in 1: length(GroupInfo)){
 groupTableList
 ```
 
-### PLS-DA
+### OPLS-DA
 
-PLS-DA is a supervised method in which prior knowledge of grouping in the data set is incorporated into the principal component calculations in order to maximize group separation. This approach is excellent in finding differential metabolites between two groups, but it has the caveat of over-fitting the data, which will produce good looking plots with nonsensical data. Therefore, PLS-DA data have to be thoroughly tested for over-fitting by cross-validation and permutation tests.
+Orthogonal partial least squares discriminant analysis (OPLS-DA) is a supervised method that separates predictive variation related to class membership from orthogonal variation unrelated to class separation. Because supervised models can overfit, interpret them together with cross-validation and permutation-test results rather than relying on visual separation alone.
 
-PLS-DA data are generally reliable when R2Y values are close to, but not equal or above, 1 and the Q2Y value above 0.4. Also, the results for the
-permutation tests (pR2Y and pQ2Y) should be below 0.05 [3].
+R2Y describes model fit, whereas Q2 estimates predictive performance. A high R2Y combined with a much lower Q2 can indicate overfitting. Permutation-test results (pR2Y and pQ2Y) provide additional evidence when assessing model validity [3].
 
-The `S-plot` is a visualization method that combines the modeled covariance (X-axis) and modeled correlation (Y-axis) from the PLS-DA on a scatter plot, allowing for pinpointing of interesting variables. The variables showing the highest covariance and correlation values with variable influence
-on projection (VIP) >= 1 are considered the most relevant variables for the classification between samples. 
+The `S-plot` combines modeled covariance (x-axis) and modeled correlation (y-axis) from OPLS-DA. Features with large absolute covariance and correlation, together with VIP >= 1, may contribute strongly to group separation and should be evaluated with supporting statistical and biological evidence.
 
 ```{r}
 #| label = PLSDA,
@@ -531,9 +531,9 @@ for (i in seq_along(listnames)){
 
 K-Means Cluster Analysis can be used to reveal the main subsets of mass features that displayed differential profiles across different sample groups.
 
-The `Cluster Plot` shows the trend of the metabolic profiles in each subset (subgroup)
+The `Cluster Plot` shows the trend of the metabolic profiles in each subset (subgroup).
 
-The `Table` provides more details information of each metabolite, such as metabolite name (if exit), standardized peak area and the group information.
+The `Table` provides details for each feature, such as the metabolite name (if present), standardized peak area, and group information.
 
 **Metabolic Profile Clustering**
 ```{r}
@@ -574,15 +574,15 @@ DT::datatable(params$KMTable,
 ```
 
 
-### Barplot
+### Bar Plot
 
-The bar plot shows the quantitative information of each metabolite in different sample group.
+The bar plot summarizes each selected metabolite across sample groups.
 
 > <span style = "color : #FF8300">**Note**</span>
 >
-> Depending on the slected setting in **MetaboReport** workflow, different data transformation is used before maiking barplot, please refer to the y-axis legend for the data transformation method.
+> The transformation selected in the **MetaboReport** workflow is applied before plotting. Refer to the y-axis label for the transformation method.
 >
-> In the selection box, you can choose the metabolite to display the plot for this metabolite. The corresponding table information of this selected metabolite will be displayed as well.
+> Select a metabolite to update both the plot and its corresponding table.
 
 
 ```{r}
@@ -660,7 +660,11 @@ DT::datatable(BPData,
 
 
 
-# Reference
+# Citation
+
+> Dong, Y. and Malitsky, S., 2024. MetaboReport: from metabolomics data analysis to comprehensive reporting. *Bioinformatics*, *40*(6), p.btae373.
+
+# References
 
 [1] Broadhurst, D., Goodacre, R., Reinke, S.N., Kuligowski, J., Wilson, I.D., Lewis, M.R. and Dunn, W.B., 2018. Guidelines and considerations for the use of system suitability and quality control samples in mass spectrometry assays applied in untargeted clinical metabolomic studies. Metabolomics, 14(6), pp.1-17.
 
