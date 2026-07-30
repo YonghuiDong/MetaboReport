@@ -92,6 +92,20 @@ test_that("Chinese report plots retain English labels", {
   expect_false(grepl('name = "显著性"', chinese))
 })
 
+test_that("report bar tables only respond to plot legend filtering", {
+  for (template in c("Report.Rmd", "Report_zh.Rmd")) {
+    report <- paste(
+      readLines(MetaboReport:::app_sys("app/www", template), warn = FALSE),
+      collapse = "\n"
+    )
+
+    expect_match(report, 'selection = "none"', fixed = TRUE)
+    expect_match(report, 'plotly::highlight(on = "plotly_selected")', fixed = TRUE)
+    expect_match(report, "plotly_restyle", fixed = TRUE)
+    expect_match(report, "table.column(1).search", fixed = TRUE)
+  }
+})
+
 test_that("blank report methods are labeled as not provided", {
   methods <- MetaboReport:::format_report_methods("", " ", NA_character_)
   expect_equal(lengths(regmatches(methods, gregexpr("Not provided", methods))), 3L)

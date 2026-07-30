@@ -511,6 +511,8 @@ DT::datatable(params$KMTable,
 > 绘图前会应用 **MetaboReport** 工作流程中选择的数据转换方法，具体方法请参阅 y 轴标签。
 >
 > 选择一个代谢物后，图形及对应表格将同步更新。
+>
+> 点击图例可隐藏或显示样品组，下方表格将同步更新；表格操作不会改变柱状图。
 
 
 ```{r}
@@ -558,11 +560,15 @@ BPPlot <- plotly::plot_ly(data = BPData,
     xaxis = list(title = "Group"),
     yaxis = list(categoryorder = "trace", title = yLegend)
   ) %>%
-  plotly::config(toImageButtonOptions = list(format = "svg", filename = "plot"))
+  plotly::highlight(on = "plotly_selected") %>%
+  plotly::config(
+    toImageButtonOptions = list(format = "svg", filename = "plot"),
+    modeBarButtonsToRemove = c("select2d", "lasso2d")
+  )
 
 filter <- crosstalk::bscols(
   metaboliteFilter,
-  BPPlot,
+  htmltools::div(id = "bar-plot-report", BPPlot),
   widths = 12
   )
 
@@ -579,6 +585,24 @@ crosstalk::bscols(filter)
 #| out.width = '100%'
 #(8) show box plot table -------------------------------------------------------
 
+barTableCallback <- DT::JS(
+  "setTimeout(function() {",
+  "  var plot = document.querySelector('#bar-plot-report .plotly');",
+  "  if (!plot || !plot.on) return;",
+  "  var syncVisibleGroups = function() {",
+  "    var visible = plot.data.filter(function(trace) {",
+  "      return trace.visible !== 'legendonly' && trace.visible !== false;",
+  "    }).map(function(trace) {",
+  "      return $.fn.dataTable.util.escapeRegex(String(trace.name));",
+  "    });",
+  "    var query = visible.length === plot.data.length ? '' :",
+  "      (visible.length ? '^(' + visible.join('|') + ')$' : 'a^');",
+  "    table.column(1).search(query, true, false).draw();",
+  "  };",
+  "  plot.on('plotly_restyle', function() { setTimeout(syncVisibleGroups, 0); });",
+  "}, 0);"
+)
+
 DT::datatable(BPData,
               colnames = c("代谢物", "分组", "均值", "标准差"),
               options = list(scrollX = TRUE,
@@ -586,6 +610,8 @@ DT::datatable(BPData,
                              scroller = TRUE,
                              fixedColumns = FALSE
                              ),
+              selection = "none",
+              callback = barTableCallback,
               rownames = FALSE
               )
 ```
