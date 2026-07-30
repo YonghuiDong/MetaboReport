@@ -1,5 +1,5 @@
 ---
-title: '`r paste("Report for Project:", params$projectName, sep = " ")`'
+title: '<img class="report-header-logo" src="FAFU.png" alt="FAFU and Metabolomics Research Center logos"><span>`r paste("Report for Project:", params$projectName, sep = " ")`</span>'
 date: '`r format(Sys.Date(), "%d %B %Y")`'
 author: '`r params$authorName`'
 output:
@@ -63,10 +63,6 @@ myRawData <- myRawData %>%
   dplyr::mutate(ID = paste0("ID", row.names(.))) %>%
   dplyr::relocate(ID)
 ```
-
-<img src="logo.png" height="150" style="position:absolute; top:90px; right:10px;" alt="MetaboReport logo"/>
-
-<div style="height:120px;"></div>
 
 ```{asis, echo = as.logical(params$showIntro)}
 # Introduction

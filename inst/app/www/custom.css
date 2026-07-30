@@ -39,6 +39,17 @@ body {
   font-size: 14px;
 }
 
+.landing-footer-logo {
+  margin: 36px 0 12px;
+}
+
+.landing-footer-logo img {
+  display: block;
+  width: 100%;
+  max-width: 920px;
+  height: auto;
+}
+
 /* Analysis and report progress */
 #shiny-notification-panel {
   width: 480px !important;

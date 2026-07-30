@@ -64,6 +64,15 @@ test_that("English and Chinese report templates contain valid R code", {
   }
 })
 
+test_that("both report templates use the institutional logo", {
+  for (template in c("Report.Rmd", "Report_zh.Rmd")) {
+    report <- readLines(MetaboReport:::app_sys("app/www", template), warn = FALSE)
+    logo_line <- grep('src="FAFU.png"', report, fixed = TRUE)
+    expect_length(logo_line, 1L)
+    expect_lt(logo_line, grep("^author:", report))
+  }
+})
+
 test_that("PCA notes render as blockquotes in both report templates", {
   templates <- c("Report.Rmd", "Report_zh.Rmd")
   for(template in templates) {

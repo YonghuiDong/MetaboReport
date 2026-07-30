@@ -193,13 +193,16 @@ table.dataTable tbody tr:hover {
   box-shadow: 0 0 0 3px rgba(22, 125, 115, 0.12) !important;
 }
 
-img[alt="MetaboReport logo"] {
-  width: auto !important;
-  max-height: 150px;
+.report-header-logo {
+  display: block;
+  width: 100% !important;
+  max-width: 920px;
+  height: auto !important;
+  margin: 0 0 32px;
   border: 0 !important;
 }
 
-img[src^="data:image"]:not([alt="MetaboReport logo"]) {
+img[src^="data:image"]:not([alt="FAFU and Metabolomics Research Center logos"]) {
   display: block;
   max-width: 100%;
   height: auto;
@@ -251,6 +254,10 @@ img[src^="data:image"]:not([alt="MetaboReport logo"]) {
 
   .dataTables_wrapper {
     padding: 8px;
+  }
+
+  .report-header-logo {
+    margin-bottom: 24px;
   }
 }
 

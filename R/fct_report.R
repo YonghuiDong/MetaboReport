@@ -118,7 +118,7 @@ render_metabo_report <- function(
   source_files <- c(
     report = file.path(template_dir, template),
     css = file.path(template_dir, "reportCSS", "style.css"),
-    logo = file.path(template_dir, "img", "logo.png")
+    logo = file.path(template_dir, "img", "FAFU.png")
   )
   missing_files <- source_files[!file.exists(source_files)]
   if (length(missing_files)) {
@@ -129,7 +129,7 @@ render_metabo_report <- function(
   dir.create(work_dir)
   on.exit(unlink(work_dir, recursive = TRUE), add = TRUE)
 
-  destination_files <- file.path(work_dir, c("Report.Rmd", "style.css", "logo.png"))
+  destination_files <- file.path(work_dir, c("Report.Rmd", "style.css", "FAFU.png"))
   copied <- file.copy(source_files, destination_files, overwrite = TRUE)
   if (!all(copied)) {
     stop("The report resources could not be prepared.")

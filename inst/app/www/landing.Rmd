@@ -49,3 +49,7 @@ Select <span style="color:#E1937A">Other format</span> when uploading these file
 > Demo dataset 2 was prepared using Method 2 (see the manual). Peak-area data and metadata are stored in separate tables: (1) <a href="www/demo/M2_Feature_Table.csv" download><i class="fa fa-download fa-s" aria-hidden="true"></i> peak-area table (CSV)</a>; (2) <a href="www/demo/M2_Medadata_Table.xlsx" download><i class="fa fa-download fa-s" aria-hidden="true"></i> metadata table (XLSX)</a>.
 
 ---
+
+<div class="landing-footer-logo">
+  <img src="img/FAFU.png" alt="FAFU and Metabolomics Research Center logos"/>
+</div>
