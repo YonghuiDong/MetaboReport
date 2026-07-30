@@ -156,8 +156,9 @@ PCA 得分反映各样品在主成分空间中的位置，通常以 PC1 对 PC2 
 #(2) show PCA plot--------------------------------------------------------------
 
 params$myPCAPlot +
-  ggplot2::labs(color = "分组", fill = "分组")
+  ggplot2::labs(color = "Group", fill = "Group")
 ```
+
 > <span style = "color : #FF8300">**注意：**</span>
 >
 > PCA 得分图用于展示数据的整体结构并辅助识别潜在离群样品；若包含 QC 样品，还可用于评估分析重复性。
@@ -419,16 +420,8 @@ for (i in seq_along(listnames)){
 
   # Keep these as ggplot objects. plotly 4.10.x cannot convert ggplot2 4.x
   # objects and aborts the entire report with "subscript out of bounds".
-  p1 <- showOPLSDA(resultOPLSDA, Group = groupOPLSDA, size = 1, interactive = FALSE) +
-    ggplot2::labs(
-      title = paste0("样品组：", levels(groupOPLSDA)[1], " 与 ", levels(groupOPLSDA)[2]),
-      x = paste0("预测得分 t[1]（", resultOPLSDA@modelDF$R2X[1] * 100, "%）"),
-      y = "正交得分 to[1]",
-      color = "分组",
-      fill = "分组"
-    )
-  p2 <- showSplot(matrixOPLSDA, resultOPLSDA, size = 1, interactive = FALSE) +
-    ggplot2::labs(title = "S 图", x = "协方差", y = "相关性")
+  p1 <- showOPLSDA(resultOPLSDA, Group = groupOPLSDA, size = 1, interactive = FALSE)
+  p2 <- showSplot(matrixOPLSDA, resultOPLSDA, size = 1, interactive = FALSE)
   print(p1)
   print(p2)
 }
@@ -457,21 +450,7 @@ for (i in seq_along(listnames)){
     FC = 2,
     pValue = 0.05,
     interactive = FALSE
-  ) +
-    ggplot2::labs(
-      title = paste0("火山图：", listnames[[i]][1], " 与 ", listnames[[i]][2]),
-      color = "显著性"
-    ) +
-    ggplot2::scale_color_manual(
-      name = "显著性",
-      values = c(
-        "Not Significant" = "#B3B3B3",
-        "Significantly Up" = nature_colors[[1L]],
-        "Significantly Down" = nature_colors[[2L]]
-      ),
-      breaks = c("Not Significant", "Significantly Up", "Significantly Down"),
-      labels = c("不显著", "显著升高", "显著降低")
-    )
+  )
   print(volcanoPlot)
 }
 ```
@@ -493,7 +472,7 @@ K-means 聚类分析可将具有相似变化趋势的质谱特征归入同一类
 #| out.width = '100%'
 #(8.2) show K-Means result------------------------------------------------------
 
-params$KMTrendPlot + ggplot2::ylab("标准化峰面积")
+params$KMTrendPlot
 ```
 
 
@@ -561,9 +540,9 @@ metaboliteFilter <- crosstalk::filter_select(id = "Metabolite",
                                              multiple = FALSE
                                              )
 yLegend <- switch(params$BPTransform,
-                  none = "原始峰面积",
-                  log2 = "Log2 转换后的峰面积",
-                  log10 = "Log10 转换后的峰面积"
+                  none = "Raw Peak Area",
+                  log2 = "Log2-transformed Peak Area",
+                  log10 = "Log10-transformed Peak Area"
                   )
 
 BPPlot <- plotly::plot_ly(data = BPData,
@@ -576,7 +555,7 @@ BPPlot <- plotly::plot_ly(data = BPData,
                           type = 'bar'
                           ) %>%
   plotly::layout(
-    xaxis = list(title = "分组"),
+    xaxis = list(title = "Group"),
     yaxis = list(categoryorder = "trace", title = yLegend)
   ) %>%
   plotly::config(toImageButtonOptions = list(format = "svg", filename = "plot"))

@@ -64,6 +64,34 @@ test_that("English and Chinese report templates contain valid R code", {
   }
 })
 
+test_that("PCA notes render as blockquotes in both report templates", {
+  templates <- c("Report.Rmd", "Report_zh.Rmd")
+  for(template in templates) {
+    lines <- readLines(MetaboReport:::app_sys("app/www", template), warn = FALSE)
+    pca <- match("### PCA", lines)
+    next_section <- grep("^### ", lines)[grep("^### ", lines) > pca][1]
+    section <- paste(lines[pca:(next_section - 1L)], collapse = "\n")
+
+    expect_match(section, "```\\n\\n> <span", fixed = FALSE)
+  }
+
+  chinese <- readLines(MetaboReport:::app_sys("app/www/Report_zh.Rmd"), warn = FALSE)
+  expect_true(any(grepl('ggplot2::labs\\(color = "Group", fill = "Group"\\)', chinese)))
+})
+
+test_that("Chinese report plots retain English labels", {
+  chinese <- paste(
+    readLines(MetaboReport:::app_sys("app/www/Report_zh.Rmd"), warn = FALSE),
+    collapse = "\n"
+  )
+
+  expect_match(chinese, 'xaxis = list\\(title = "Group"\\)')
+  expect_match(chinese, 'none = "Raw Peak Area"')
+  expect_false(grepl('ggplot2::labs\\(title = "S 图"', chinese))
+  expect_false(grepl('ggplot2::ylab\\("标准化峰面积"\\)', chinese))
+  expect_false(grepl('name = "显著性"', chinese))
+})
+
 test_that("blank report methods are labeled as not provided", {
   methods <- MetaboReport:::format_report_methods("", " ", NA_character_)
   expect_equal(lengths(regmatches(methods, gregexpr("Not provided", methods))), 3L)

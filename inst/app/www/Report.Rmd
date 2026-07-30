@@ -157,6 +157,7 @@ PCA scores describe the position of each sample along the principal components. 
 
 params$myPCAPlot
 ```
+
 > <span style = "color : #FF8300">**Note:**</span>
 >
 > This PCA score plot provides an overview of the data structure, helps identify potential outliers, and—when QC samples are present—supports evaluation of analytical reproducibility.
