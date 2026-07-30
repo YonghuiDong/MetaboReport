@@ -44,7 +44,7 @@ mod_05_downloadReport_ui <- function(id){
                            ),
                  textInput(inputId = ns("authorName"),
                            label = "Author Name",
-                           value = "Metabolic Profiling Unit, Weizmann Institute of Science",
+                           value = "Metabolomics Core Facility, FAFU / 福建农林大学-海峡院-代谢组学平台",
                            placeholder = "(Optional) Contact name"
                            )
                  ),
