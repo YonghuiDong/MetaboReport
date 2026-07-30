@@ -17,23 +17,25 @@
 
 showBoxplot <- function(DF, Transform = "none", Group, Metabolite, colorPalette = "Default", BPPlotType = "Box plot"){
   #(1) Prepare plot ------------------------------------------------------------
-  DF <- switch(Transform,
-               "none" = DF,
-               "log2" = log2(DF),
-               "log10" = log10(DF)
-               )
+  Metabolite <- as.character(Metabolite)
+  if(length(Metabolite) != 1L || !Metabolite %in% names(DF)) stop("Unknown metabolite selected")
+  values <- switch(Transform,
+                   "none" = DF[[Metabolite]],
+                   "log2" = log2(DF[[Metabolite]]),
+                   "log10" = log10(DF[[Metabolite]]),
+                   stop("Unknown transformation method"))
   yLegend <- switch(Transform,
                     "none" = "Peak Area",
                     "log2" = "Log2 Transformed Peak Area",
                     "log10" = "Log10 Transformed Peak Area"
                     )
-  p <- DF %>%
-    dplyr::mutate(Group = Group) %>%
-    dplyr::select(Group, Metabolite = all_of(Metabolite)) %>%
+  plot_data <- data.frame(Group = Group, Metabolite = values) %>%
     dplyr::filter(Group != "QC") %>%
-    dplyr::group_by(Group) %>%
-    dplyr::mutate(MEAN = mean(Metabolite), SD = sd(Metabolite)) %>%
-    ggplot2::ggplot(aes(x = Group, fill = Group)) +
+    dplyr::group_by(Group)
+  if(BPPlotType == "Bar plot") {
+    plot_data <- dplyr::mutate(plot_data, MEAN = mean(Metabolite), SD = sd(Metabolite))
+  }
+  p <- ggplot2::ggplot(plot_data, aes(x = Group, fill = Group)) +
     ggplot2::ylab(yLegend) +
     ggplot2::theme_bw() +
     ggplot2::ggtitle(paste0("Metabolite: ", Metabolite)) +
@@ -58,7 +60,8 @@ showBoxplot <- function(DF, Transform = "none", Group, Metabolite, colorPalette 
                "Bar plot" = p +
                  ggplot2::geom_bar(aes(y = MEAN), alpha = 0.8, stat = "identity", width = 0.5, color = "black", position = position_dodge()) +
                  ggplot2::geom_errorbar(aes(ymin = MEAN, ymax = MEAN + SD), width = 0.2, position = position_dodge(0.9)) +
-                 ggplot2::geom_jitter(aes(y = Metabolite), shape = 16, position = position_jitter(0.2), color = "black")
+                 ggplot2::geom_jitter(aes(y = Metabolite), shape = 16, position = position_jitter(0.2), color = "black"),
+               stop("Unknown plot type")
                )
   return(p2)
 }

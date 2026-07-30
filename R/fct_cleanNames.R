@@ -9,11 +9,9 @@
 
 cleanNames <- function(str) {
   gsub_trim <- function (x) gsub("^\\s+|\\s+$", "", x)
-  gsub_rep <- function(x) gsub("[[:punct:]]+", "_", x)
   gsub_trim2 <- function(x) gsub("^\\_+|\\_+$", "", x)
   tem <- gsub_trim(str) # trim leading and tailing white spaces
   tem <- make.names(tem) # make syntactically valid names
-  #tem3 <- gsub_rep(tem2) # replace "dots" with "underscore"
   tem <- gsub_trim2(tem) # remove mostly tailing "underscores"
   return(tem)
 }

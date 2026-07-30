@@ -23,45 +23,55 @@ searchDB <- function(DF, DB, ppm = 5, RT = 0.2, useRT = FALSE){
   names(DB)[toupper(names(DB)) == "RT"] <- "DB.RT"
   if(!'Sample.mz' %in% colnames(DF)) {stop("Column 'mz' is not found in your data")}
   if(!'DB.mz' %in% colnames(DB)) {stop("Column 'mz' is not found in your database")}
-  cat("Searching started...\n")
-
-  #(2) define function and search
-  Result <- vector(mode = "list", length = length(DF$Sample.mz))
-  pb <- txtProgressBar(min = 0, max = length(DF$Sample.mz), style = 3)
-
-  for (i in 1:length(DF$Sample.mz)) {
-    ## progress bar
-    setTxtProgressBar(pb, i)
-
-    if(useRT == TRUE) {
-      if(!'Sample.RT' %in% colnames(DF)) {stop("Column 'rt' is not found in your data")}
-      if(!'DB.RT' %in% colnames(DB)) {stop("Column 'rt' is not found in your database")}
-      ## filter according to ppm and RT
-      Result[[i]] <- subset(DB, abs(DB$DB.mz - DF$Sample.mz[i]) * 10^6 / DB$DB.mz <= ppm & abs(DB$DB.RT - DF$Sample.RT[i]) < RT)
-      if(dim(Result[[i]])[1] > 0) {
-        ppms <- (Result[[i]]$DB.mz - DF$Sample.mz[i]) * 10^6 / Result[[i]]$DB.mz
-        rts <- Result[[i]]$DB.RT - DF$Sample.RT[i]
-        Result[[i]] <- cbind(QuerryID = i, DF[i, ], Result[[i]], ppm = round(ppms, 2), RT_dif = round(rts, 2))
-        row.names(Result[[i]]) <- NULL
-      } else{
-        Result[[i]] <- NULL
-      }
-
-    } else {
-      Result[[i]] <- subset(DB, abs(DB$DB.mz - DF$Sample.mz[i]) * 10^6 / DB$DB.mz <= ppm)
-      if(dim(Result[[i]])[1] > 0) {
-        ppms <- (Result[[i]]$DB.mz - DF$Sample.mz[i]) * 10^6 / Result[[i]]$DB.mz
-        Result[[i]] <- cbind(QuerryID = i, DF[i, ], Result[[i]], ppm = round(ppms, 2))
-        row.names(Result[[i]]) <- NULL
-      } else{
-        Result[[i]] <- NULL
-      }
-    }
+  if(!is.numeric(DF$Sample.mz) || !is.numeric(DB$DB.mz)) {stop("m/z columns must be numeric")}
+  if(!is.numeric(ppm) || length(ppm) != 1L || !is.finite(ppm) || ppm < 0 || ppm >= 1e6) {
+    stop("ppm must be a finite value between 0 and 1,000,000.")
+  }
+  if(isTRUE(useRT) && (!'Sample.RT' %in% colnames(DF) || !'DB.RT' %in% colnames(DB))) {
+    stop("Column 'rt' is not found in your data or database")
+  }
+  if(isTRUE(useRT) && (!is.numeric(DF$Sample.RT) || !is.numeric(DB$DB.RT))) {
+    stop("RT columns must be numeric")
+  }
+  if(isTRUE(useRT) && (!is.numeric(RT) || length(RT) != 1L || !is.finite(RT) || RT < 0)) {
+    stop("RT tolerance must be a finite non-negative value.")
   }
 
-  close(pb)
+  #(2) sort once, then search only the matching mass range
+  valid_db <- which(is.finite(DB$DB.mz) & DB$DB.mz > 0)
+  db_order <- valid_db[order(DB$DB.mz[valid_db])]
+  sorted_mz <- DB$DB.mz[db_order]
+  tolerance <- ppm / 1e6
+  Result <- vector("list", nrow(DF))
+
+  for (i in seq_len(nrow(DF))) {
+    sample_mz <- DF$Sample.mz[i]
+    if(!is.finite(sample_mz) || sample_mz <= 0 || !length(sorted_mz)) next
+    lower <- sample_mz / (1 + tolerance)
+    upper <- sample_mz / (1 - tolerance)
+    first <- findInterval(lower, sorted_mz, left.open = TRUE) + 1L
+    last <- findInterval(upper, sorted_mz)
+    if(first > last) next
+    matches <- DB[sort(db_order[first:last]), , drop = FALSE]
+
+    if(isTRUE(useRT)) {
+      if(!is.finite(DF$Sample.RT[i])) next
+      keep_rt <- is.finite(matches$DB.RT) & abs(matches$DB.RT - DF$Sample.RT[i]) < RT
+      matches <- matches[keep_rt, , drop = FALSE]
+    }
+    if(!nrow(matches)) next
+
+    query_row <- DF[i, , drop = FALSE]
+    row.names(query_row) <- row.names(matches) <- NULL
+    ppms <- (matches$DB.mz - sample_mz) * 1e6 / matches$DB.mz
+    Result[[i]] <- cbind.data.frame(QuerryID = i, query_row, matches,
+                                    ppm = round(ppms, 2))
+    if(isTRUE(useRT)) Result[[i]]$RT_dif <- round(matches$DB.RT - DF$Sample.RT[i], 2)
+    row.names(Result[[i]]) <- NULL
+  }
 
   #(3) format and return result
-  myResult <- do.call(rbind.data.frame, Result)
-  return(myResult)
+  Result <- Filter(Negate(is.null), Result)
+  if(!length(Result)) return(data.frame())
+  do.call(rbind.data.frame, Result)
 }

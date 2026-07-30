@@ -24,42 +24,31 @@
 
 checkReplicates <- function(df, col_all = NULL, col_any = NULL) {
   #(1) check input
-  if(is.null(col_all) & is.null(col_any))stop("At least one column should be selected")
+  if(is.null(col_all) && is.null(col_any)) stop("At least one column should be selected")
+  selected <- c(col_all, col_any)
+  if(any(!selected %in% names(df))) stop("Unknown column selected")
+  duplicated_group <- function(x) duplicated(x) | duplicated(x, fromLast = TRUE)
 
   #(2) check condition 1.
   if(is.null(col_all)){
-    df$allReplicate = TRUE
+    all_replicate <- rep(TRUE, nrow(df))
   } else{
-    df <- df %>%
-      dplyr::group_by(across(col_all)) %>%
-      dplyr::mutate(allReplicate = n() > 1) %>%
-      dplyr::ungroup()
-    }
+    all_replicate <- duplicated_group(df[col_all])
+  }
 
   #(3) check condition 2.
   if(is.null(col_any)){
-    Final <- cbind.data.frame(df, anyReplicate = TRUE)
+    any_replicate <- rep(TRUE, nrow(df))
   } else{
-    n <- length(col_any)
-    m <- dim(df)[1]
-    tem <- data.frame(matrix(ncol = n, nrow = m))
-    for(i in 1:n)
-      tem[, i] <- df %>%
-      dplyr::group_by(allReplicate, !!sym(col_any[i])) %>% # here need to add allReplicate to make sure that no mismatch. see Example2.
-      dplyr::mutate(x = n() > 1) %>%
-      dplyr::ungroup() %>%
-      dplyr::select(x)
-    tem2 <- tem %>%
-      dplyr::mutate(anyReplicate = ifelse(rowSums(.) > 0, TRUE, FALSE)) %>%
-      dplyr::select(anyReplicate)
-    Final <- cbind.data.frame(df, tem2)
+    any_replicate <- rep(FALSE, nrow(df))
+    eligible <- which(all_replicate)
+    for(column in col_any) {
+      any_replicate[eligible] <- any_replicate[eligible] |
+        duplicated_group(df[[column]][eligible])
+    }
   }
 
   #(4) check both condition 1 & 2.
-  Final <- Final %>%
-    dplyr::rowwise() %>%
-    dplyr::mutate(isReplicate = ifelse(isTRUE(allReplicate) & isTRUE(anyReplicate), TRUE, FALSE)) %>%
-    dplyr::select(-c(allReplicate, anyReplicate)) %>%
-    dplyr::relocate(isReplicate)
-  return(Final)
+  df$isReplicate <- all_replicate & any_replicate
+  df[c("isReplicate", setdiff(names(df), "isReplicate"))]
 }

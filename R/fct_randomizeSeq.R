@@ -17,6 +17,7 @@
 #' result <- randomizeSeq(df, nBlank = 0, nQC = 6, nWithinBlank = 0, nEmptyCell = 2)
 
 randomizeSeq <- function(df, nBlank = 0, nQC = 0, nWithinBlank = 0, nEmptyCell = 0, plateRow = 6, plateCol = 8, plateIDType = "Letter", outputType = "Orbitrap") {
+  if(nQC < 0 || nBlank < 0 || nWithinBlank < 0 || nEmptyCell < 0) stop("Sequence counts must be non-negative")
   colnames(df) <- c("Group", "Rep")
   ## Best block is designed when the replicates are not the same among different groups
   bestBlock <- df %>%
@@ -39,12 +40,8 @@ randomizeSeq <- function(df, nBlank = 0, nQC = 0, nWithinBlank = 0, nEmptyCell =
   if(nQC != 0){
     new_row <- data.frame(Group = c("QC", rep("Blank", nWithinBlank)), Sample = c("QC", rep("Blank", nWithinBlank)))
 
-    df2 <- df2 %>%
-      dplyr::slice(c(1:(nQC-1), nQC:nrow(.))) %>% # Slice into two parts
-      dplyr::group_by(group = (seq_len(nrow(.)) - 1) %/% nQC + 1) %>% # Group by every n rows
-      dplyr::do(dplyr::bind_rows(., new_row)) %>% # Add new row after every n rows
-      dplyr::ungroup() %>% # Ungroup the data
-      dplyr::select(-group) %>%
+    blocks <- split(df2, (seq_len(nrow(df2)) - 1L) %/% nQC)
+    df2 <- dplyr::bind_rows(lapply(blocks, function(block) dplyr::bind_rows(block, new_row))) %>%
       dplyr::group_by(Sample) %>%
       dplyr::mutate(Sample = ifelse(Sample == "QC", paste0("QC_", (row_number()+1)), Sample),
                     Sample = ifelse(Sample == "Blank", paste0("Blank_", (row_number() + nBlank)), Sample)) %>%

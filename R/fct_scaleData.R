@@ -16,7 +16,9 @@ scaleData <- function(DF, Method = "None") {
                 "paretoScale" = t(apply(t(DF), 2, function(x) ((x - mean(x))/sqrt(sd(x))))),
                 "rangeScale" = t(apply(t(DF), 2, function(x) ((x - mean(x))/(max(x) - min(x))))),
                 "vastScale" = t(apply(t(DF), 2, function(x) ((x - mean(x))/sd(x) * mean(x)/sd(x)))),
-                "levelScale" = t(apply(t(DF), 2, function(x) ((x - mean(x))/mean(x))))
+                "levelScale" = t(apply(t(DF), 2, function(x) ((x - mean(x))/mean(x)))),
+                stop("Unknown scaling method")
                 )
+  if(Method != "None") tem[is.nan(tem) | is.infinite(tem)] <- 0
   return(tem)
   }

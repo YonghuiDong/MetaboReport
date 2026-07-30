@@ -62,3 +62,25 @@ test_that("interactive PCA and volcano plots do not depend on ggplotly", {
   ))$x$data
   expect_equal(vapply(strict, `[[`, "", "name"), "Not Significant")
 })
+
+test_that("zero p-values remain significant in volcano plots", {
+  statistics <- data.frame(
+    Fold_A_vs_B = 4,
+    AdjPvalue_A_vs_B = 0,
+    row.names = "feature"
+  )
+  plot <- MetaboReport:::showVolcano(statistics, c("A", "B"), interactive = FALSE)
+
+  expect_identical(as.character(plot$data$significant), "Significantly Up")
+  expect_true(is.finite(plot$data$p_value))
+})
+
+test_that("box plots transform only the selected metabolite", {
+  data <- data.frame(target = c(1, 2), unused = c("x", "y"))
+  plot <- MetaboReport:::showBoxplot(
+    data, "log2", c("A", "B"), quote(target), BPPlotType = "Bar plot"
+  )
+
+  expect_s3_class(plot, "ggplot")
+  expect_equal(plot$data$Metabolite, c(0, 1))
+})

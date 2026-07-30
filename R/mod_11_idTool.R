@@ -134,14 +134,16 @@ mod_11_idTool_server <- function(id){
           if(useRT() == "Yes"){
             shiny::validate(need(!is.null(sampleFile()$RT), message = "RT column in sample file not found"))
             shiny::validate(need(!is.null(dbFile()$RT), message = "RT column in database file not found"))
-            tem <- searchDB(DF = sampleFile(), DB = dbFile(), ppm = ppmTolerance(), RT = rtTolerance(), useRT = TRUE) %>%
-              dplyr::relocate("QuerryID", "Sample.mz", "Sample.RT", "DB.mz", "DB.RT", "ppm", "RT_dif")
+            tem <- searchDB(DF = sampleFile(), DB = dbFile(), ppm = ppmTolerance(), RT = rtTolerance(), useRT = TRUE)
           } else {
-            tem <- searchDB(DF = sampleFile(), DB = dbFile(), ppm = ppmTolerance(), useRT = FALSE) %>%
-              dplyr::relocate("QuerryID", "Sample.mz", "Sample.RT", "DB.mz", "DB.RT", "ppm")
+            tem <- searchDB(DF = sampleFile(), DB = dbFile(), ppm = ppmTolerance(), useRT = FALSE)
           }
-          if(is.null(tem)){tem = "Not Found"}
-          return(tem)
+          if(!nrow(tem)) return("Not Found")
+          priority_columns <- intersect(
+            c("QuerryID", "Sample.mz", "Sample.RT", "DB.mz", "DB.RT", "ppm", "RT_dif"),
+            names(tem)
+          )
+          dplyr::relocate(tem, dplyr::all_of(priority_columns))
         })
     })
 

@@ -14,7 +14,7 @@
 #' showCAplot(PCC, Metabolite = "ID3_Creatine", Threshold = 0.85, LabelSize = 20)
 
 
-showCAplot <- function(PCC, Metabolite, Threshold = 0.9, FullName = TRUE, LabelSize = 20){
+showCAplot <- function(PCC, Metabolite, Threshold = 0.9, LabelSize = 20){
   #(1) Prepare network object --------------------------------------------------
   edges <- PCC %>%
     as.data.frame() %>%
@@ -36,5 +36,4 @@ showCAplot <- function(PCC, Metabolite, Threshold = 0.9, FullName = TRUE, LabelS
     visNetwork::visInteraction(navigationButtons = TRUE) %>%
     visNetwork::visIgraphLayout(randomSeed = 123)
 }
-
 

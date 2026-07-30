@@ -13,17 +13,28 @@
 getCV <- function(x, Group = NULL){
   cat ("\n- Calculating coefficient of variation (CV)...\n")
   #(1) check input
-  Group <- as.factor(Group)
   if(is.null(Group)){stop("Please include group information")}
+  Group <- as.factor(Group)
   if(length(levels(Group)) <= 1){stop("At least two sample groups should be included")}
-  if(length(Group) != nrow(x)){stop("Missing group informaiton detected")}
+  if(length(Group) != nrow(x)){stop("Missing group information detected")}
 
   # calculate CV
-  i <- split(1:nrow(x), Group)
-  mean_int <- sapply(i, function(i){colMeans(x[i, ])})
-  colSd <- function (x, na.rm=FALSE) apply(X=x, MARGIN=2, FUN=sd, na.rm=na.rm)
-  sd_int <- sapply(i, function(i){colSd(x[i, ])})
-  cv_int <- sd_int/mean_int * 100
+  x <- as.matrix(x)
+  groups <- split(seq_len(nrow(x)), Group, drop = TRUE)
+  cv_int <- vapply(groups, function(rows) {
+    values <- x[rows, , drop = FALSE]
+    means <- colMeans(values)
+    sds <- if(length(rows) > 1L) {
+      sqrt(colSums(sweep(values, 2, means, "-")^2) / (length(rows) - 1L))
+    } else {
+      rep(NA_real_, ncol(values))
+    }
+    sds / means * 100
+  }, numeric(ncol(x)))
+  if(is.null(dim(cv_int))) {
+    cv_int <- matrix(cv_int, nrow = ncol(x),
+                     dimnames = list(colnames(x), names(groups)))
+  }
   ret <- round(cv_int, 2)
   colnames(ret) <- paste("CV_", colnames(cv_int), sep = "")
   cat(": CV calculation done!\n")

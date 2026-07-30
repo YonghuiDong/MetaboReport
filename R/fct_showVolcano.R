@@ -21,10 +21,11 @@
 showVolcano <- function(result, compare_group, FC = 2, pValue = 0.05, interactive = TRUE) {
 
   #(1)check input
-  if(!is.numeric(FC)){stop("Fold-change threshold must be numeric.")}
-  if(!is.numeric(pValue)){stop("P-value threshold must be numeric.")}
+  if(!is.numeric(FC) || length(FC) != 1L || !is.finite(FC)){stop("Fold-change threshold must be a finite number.")}
+  if(!is.numeric(pValue) || length(pValue) != 1L || !is.finite(pValue)){stop("P-value threshold must be a finite number.")}
   if(pValue <= 0 || pValue > 1){stop("P-value threshold must be greater than 0 and no greater than 1.")}
   if(FC < 1){stop("Fold-change threshold must be at least 1.")}
+  if(length(compare_group) != 2L){stop("Exactly two groups must be selected.")}
   ## suppress "no visible binding for global variable" notes in ggplot2
   fold_change <- p_value <- significant <- NULL
 
@@ -32,6 +33,7 @@ showVolcano <- function(result, compare_group, FC = 2, pValue = 0.05, interactiv
   F_id <- paste("Fold_", compare_group[1], "_vs_", compare_group[2], sep = "")
   P_id1 <- paste("AdjPvalue_", compare_group[1], "_vs_", compare_group[2], sep = "")
   P_id2 <- paste("AdjPvalue_", compare_group[2], "_vs_", compare_group[1], sep = "")
+  if(!F_id %in% colnames(result)){stop("Fold-change results for the selected groups do not exist")}
 
   #(3) plot
   ## select which p value colname exist.
@@ -45,14 +47,19 @@ showVolcano <- function(result, compare_group, FC = 2, pValue = 0.05, interactiv
   F_iden <- result[, F_id]
   F_iden[F_iden == 0] <- 0.0001 # replace 0 with 0.0001 (FC round with 4 digits), see bug36
   P_iden <- result[, P_id]
-  new_iden <- cbind.data.frame(fold_change = log2(F_iden), p_value = -log10(P_iden))
+  plot_p <- P_iden
+  positive_p <- plot_p[is.finite(plot_p) & plot_p > 0]
+  p_floor <- if(length(positive_p)) min(positive_p) / 10 else .Machine$double.xmin
+  plot_p[is.finite(plot_p) & plot_p == 0] <- p_floor
+  new_iden <- cbind.data.frame(fold_change = log2(F_iden), p_value = -log10(plot_p))
   colnames(new_iden) <- c("fold_change", "p_value") # to make sure colnames changed
 
-  ## sometimes there are inf, NAN values in FC and p-value, so i replace these values with max(FC) and 0 for FC and p, respectively
-  if(length(new_iden[!is.finite(new_iden$fold_change), ]$fold_change) > 0)
-    {new_iden[!is.finite(new_iden$fold_change), ]$fold_change <- max(abs(new_iden[is.finite(new_iden$fold_change),]$fold_change))}
-  if(length(new_iden[!is.finite(new_iden$p_value), ]$p_value) > 0)
-    {new_iden[!is.finite(new_iden$p_value), ]$p_value <- 0}
+  finite_fc <- is.finite(new_iden$fold_change)
+  fc_limit <- if(any(finite_fc)) max(abs(new_iden$fold_change[finite_fc])) else 0
+  infinite_fc <- is.infinite(new_iden$fold_change)
+  new_iden$fold_change[infinite_fc] <- sign(new_iden$fold_change[infinite_fc]) * fc_limit
+  new_iden$fold_change[!is.finite(new_iden$fold_change)] <- 0
+  new_iden$p_value[!is.finite(new_iden$p_value)] <- 0
 
   ## add color information (significance)
   new_iden$significant = "Not Significant"

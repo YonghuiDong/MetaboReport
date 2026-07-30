@@ -13,19 +13,16 @@
 
 prepareKMData <- function(DF, Group){
   #(1) Format data -------------------------------------------------------------
-  tem <- DF %>%
-    dplyr::mutate(Group = Group) %>%
-    dplyr::filter(Group != "QC") %>%
-    tidyr::pivot_longer(cols = !Group, names_to = "Metabolite", values_to = "Area") %>%
-    dplyr::group_by(Group, Metabolite) %>%
-    dplyr::summarize(meanArea = mean(Area), .groups = 'drop') %>%
-    tidyr::pivot_wider(names_from = Group, values_from = meanArea)
+  if(length(Group) != nrow(DF)) stop("Missing group information detected")
+  keep <- !is.na(Group) & Group != "QC"
+  if(!any(keep)) stop("At least one non-QC sample group is required")
+  group <- droplevels(as.factor(Group[keep]))
+  values <- as.matrix(DF[keep, , drop = FALSE])
+  means <- sweep(rowsum(values, group, reorder = TRUE), 1, as.vector(table(group)), "/")
+  tem <- data.frame(Metabolite = colnames(DF), t(means), check.names = FALSE)
+  rownames(tem) <- NULL
 
   #(2) Standardize data --------------------------------------------------------
-  RS <- rowSums(dplyr::select(tem, -Metabolite))
-  tem <- tem %>%
-    dplyr::mutate_if(is.numeric, function(x)(x/RS))
-  return(tem)
+  tem[-1L] <- tem[-1L] / rowSums(tem[-1L])
+  tem
 }
-
-

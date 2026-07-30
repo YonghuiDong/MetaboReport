@@ -19,25 +19,15 @@
 
 showSplot <- function(DF, oplsda, size = 3, interactive = FALSE) {
   #(1) Suppress no visible binding for global variable notes
-  sd <- Cov <- Corr <- NULL
+  Cov <- Corr <- NULL
   #(2) check input
-  if(class(oplsda)[1] != "opls") {stop("Wrong oplsda object detected")}
+  if(!inherits(oplsda, "opls")) {stop("Wrong oplsda object detected")}
   #(3) prepare the data
-  T <- as.matrix(oplsda@scoreMN)
-  p1 <- c()
-  for (i in 1:ncol(DF)) {
-    scov <- cov(DF[,i], T)
-    p1 <- matrix(c(p1, scov), ncol = 1)
-    }
-
-  pcorr1 <- c()
-  for (i in 1:nrow(p1)) {
-    den <- apply(T, 2, sd) * sd(DF[,i])
-    corr1 <- p1[i,]/den
-    pcorr1 <- matrix(c(pcorr1, corr1), ncol = 1)
-    }
-
-  datasplot <- data.frame(Cov = p1, Corr = pcorr1)
+  score <- oplsda@scoreMN[, 1L]
+  datasplot <- data.frame(
+    Cov = drop(stats::cov(as.matrix(DF), score)),
+    Corr = drop(stats::cor(as.matrix(DF), score))
+  )
   rownames(datasplot) <- colnames(DF)
   VIP <- getVipVn(oplsda)
   df2 <- cbind.data.frame(datasplot, VIP = VIP)

@@ -14,16 +14,18 @@
 #' dat <- data.frame(S1 = c(1, 3, 4), S2 = c(1, 10, 3), S3 = c(2, 10, 20))
 #' ret <- doNormalization(dat, Method = "PQN")
 
-doNormalization <-function(x, Method = NULL, Inx = NULL){
+doNormalization <- function(x, Method = NULL, Inx = NULL) {
   #(1) check input
   if(is.null(Method)) {stop("Please select a normalization Method")}
-  if (!(toupper(Method) %in% c("NONE", "LBME", "LBMD", "PQN", "QT", "IS")))
+  if(length(Method) != 1L) {stop("Please select one normalization Method")}
+  Method <- toupper(Method)
+  if (!(Method %in% c("NONE", "LBME", "LBMD", "PQN", "QT", "IS")))
   {stop("Invalid normalization Method")}
 
   #(2)perform normalization
   ##(2.1) linear baseline normalization based on mean values
-  if(toupper(Method) == "LBME"){
-    linear.baseline <- apply(x, 1, function(x) median(x, na.rm = T)) #compute baseline
+  if(Method == "LBME"){
+    linear.baseline <- apply(x, 1, function(x) median(x, na.rm = TRUE)) #compute baseline
     baseline.mean <- mean(linear.baseline)
     sample.means <- apply(x, 2, mean)
     linear.scaling <- baseline.mean/sample.means
@@ -31,24 +33,24 @@ doNormalization <-function(x, Method = NULL, Inx = NULL){
   }
 
   ##(2.2) linear baseline normalization based on median values
-  if (toupper(Method) == "LBMD"){
-    linear.baseline <- apply(x, 1, function(x) median(x, na.rm = T)) #compute baseline
+  if (Method == "LBMD"){
+    linear.baseline <- apply(x, 1, function(x) median(x, na.rm = TRUE)) #compute baseline
     baseline.median<-median(linear.baseline)
-    sample.medians<-apply(x, 2, function(x) median(x, na.rm = T))
+    sample.medians<-apply(x, 2, function(x) median(x, na.rm = TRUE))
     linear.scaling<-baseline.median/sample.medians
     norm.metabo.data <- t(t(x)*linear.scaling)
   }
 
   #(2.3) PQN
-  if(toupper(Method) == "PQN"){
-    reference <- apply(x, 1, function(x) median(x, na.rm = T))
+  if(Method == "PQN"){
+    reference <- apply(x, 1, function(x) median(x, na.rm = TRUE))
     quotient <- x/reference
-    quotient.median <-apply(quotient, 2, function(x) median(x, na.rm = T))
+    quotient.median <-apply(quotient, 2, function(x) median(x, na.rm = TRUE))
     norm.metabo.data <-t(t(x)/quotient.median)
   }
 
   #(2.4) QT
-  if(toupper(Method) == "QT"){
+  if(Method == "QT"){
     df_rank <- apply(x, 2, rank, ties.method = "min")
     df_sorted <- data.frame(apply(x, 2, sort))
     df_mean <- apply(df_sorted, 1, mean)
@@ -60,20 +62,25 @@ doNormalization <-function(x, Method = NULL, Inx = NULL){
   }
 
   #(2.5) No normalization
-  if(toupper(Method) == "NONE"){
+  if(Method == "NONE"){
     norm.metabo.data = x
     rownames(norm.metabo.data) <- rownames(x)
   }
 
   #(2.6) IS-based normalization
-  if(toupper(Method) == "IS"){
+  if(Method == "IS"){
+    if(is.null(Inx) || !length(Inx) || anyNA(Inx) ||
+       any(Inx != as.integer(Inx)) || any(Inx < 1 | Inx > nrow(x))) {
+      stop("Select at least one valid internal-standard row.")
+    }
     # sum IS
-    SumIS <- colMeans(x[Inx, ])
+    SumIS <- colMeans(x[Inx, , drop = FALSE])
 
-    # if contain 0, data frame will not get normalized
-    if(isTRUE(any(SumIS == 0))){norm.metabo.data <- x}
+    if(any(!is.finite(SumIS) | SumIS == 0)) {
+      stop("Internal-standard means must be finite and non-zero.")
+    }
 
-    norm.metabo.data <- mapply('/', x, SumIS)
+    norm.metabo.data <- sweep(x, 2, SumIS, "/")
     # add random noises to the single IS, otherwise the complete row of the IS is 1, which will affect multivariate analysis
     if(length(Inx) == 1){norm.metabo.data[Inx, ] = norm.metabo.data[Inx, ] + 1e-3 * runif(ncol(norm.metabo.data))}
     rownames(norm.metabo.data) <- rownames(x)

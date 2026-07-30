@@ -94,3 +94,63 @@ test_that("column removal validates its input", {
   expect_identical(names(MetaboReport:::removecolumn(data, c("b", "c"))), "a")
   expect_error(MetaboReport:::removecolumn(data, "missing"), "Unknown column")
 })
+
+test_that("internal-standard normalization validates its denominator", {
+  data <- matrix(c(2, 4, 4, 8, 6, 12), nrow = 2)
+  expected <- sweep(data, 2, colMeans(data), "/")
+
+  expect_equal(MetaboReport:::doNormalization(data, "IS", 1:2), expected)
+  expect_error(
+    MetaboReport:::doNormalization(matrix(c(0, 1, 0, 2), nrow = 2), "IS", 1),
+    "finite and non-zero"
+  )
+})
+
+test_that("vectorized CV calculation preserves the previous result", {
+  set.seed(42)
+  data <- matrix(stats::rnorm(60), nrow = 12, dimnames = list(NULL, paste0("F", 1:5)))
+  group <- factor(rep(c("B", "A", "C"), each = 4))
+  expected <- round(sapply(split(seq_len(nrow(data)), group), function(rows) {
+    apply(data[rows, , drop = FALSE], 2, stats::sd) /
+      colMeans(data[rows, , drop = FALSE]) * 100
+  }), 2)
+  colnames(expected) <- paste0("CV_", colnames(expected))
+
+  expect_identical(MetaboReport:::getCV(data, group), expected)
+  expect_equal(dim(MetaboReport:::getCV(data[, 1, drop = FALSE], group)), c(1, 3))
+})
+
+test_that("replicate checks return an ordinary data frame", {
+  data <- data.frame(a = c(1, 1, 2), b = c("x", "x", "x"))
+  result <- MetaboReport:::checkReplicates(data, "a", "b")
+
+  expect_identical(result$isReplicate, c(TRUE, TRUE, FALSE))
+  expect_false(inherits(result, "rowwise_df"))
+})
+
+test_that("k-means preparation averages groups without a long table", {
+  data <- data.frame(F1 = c(1, 3, 9, 2, 4), F2 = c(2, 4, 8, 4, 6))
+  result <- MetaboReport:::prepareKMData(data, c("B", "A", "QC", "B", "A"))
+
+  expect_identical(names(result), c("Metabolite", "A", "B"))
+  expect_equal(unname(rowSums(result[-1])), c(1, 1))
+})
+
+test_that("database search handles matches and empty input", {
+  query <- data.frame(mz = c(100, 200), RT = c(1, 2))
+  database <- data.frame(mz = c(200.0005, 100.0004), RT = c(2.05, 1.05))
+  result <- MetaboReport:::searchDB(query, database, ppm = 5, RT = 0.1, useRT = TRUE)
+
+  expect_identical(result$QuerryID, c(1L, 2L))
+  expect_equal(result$ppm, c(4, 2.5))
+  expect_equal(nrow(MetaboReport:::searchDB(query[FALSE, ], database)), 0)
+})
+
+test_that("scaling constant features does not create non-finite values", {
+  data <- rbind(constant = c(2, 2, 2), varying = c(1, 2, 3))
+
+  for(method in c("autoScale", "paretoScale", "rangeScale", "vastScale", "levelScale")) {
+    expect_true(all(is.finite(MetaboReport:::scaleData(data, method))))
+  }
+  expect_error(MetaboReport:::scaleData(data, "unknown"), "Unknown scaling method")
+})

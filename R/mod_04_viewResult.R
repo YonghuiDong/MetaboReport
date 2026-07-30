@@ -604,7 +604,7 @@ mod_04_viewResult_server <- function(id, sfData){
           statVIP <- getVIP(tClean, Group = Group)
 
           shiny::setProgress(6, detail = "6/8 - Perform PCA")
-          pcaData <- transformDF(sfData$clean, Group = NULL, rowName = TRUE)
+          pcaData <- transformDF(sfData$clean, Group = NULL)
           pcaResult <- stats::prcomp(pcaData, center = FALSE, scale. = FALSE)
 
           shiny::setProgress(7, detail = "7/8 - Assemble statistical results")
@@ -626,7 +626,7 @@ mod_04_viewResult_server <- function(id, sfData){
           heatmapTable <- combinedTable %>%
             dplyr::select(ID, starts_with("rawArea_")) %>%
             dplyr::rename_with(~ gsub("rawArea_", "", .x, fixed = TRUE))
-          heatmapData <- transformDF(heatmapTable, Group = NULL, rowName = TRUE)
+          heatmapData <- transformDF(heatmapTable, Group = NULL)
 
           list(
             statTable = statTable,
