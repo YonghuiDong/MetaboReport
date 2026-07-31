@@ -38,8 +38,8 @@
    borderopacity="1.0"
    id="namedview929"
    inkscape:current-layer="svg927"
-   inkscape:cx="-62"
-   inkscape:cy="301"
+   inkscape:cx="66"
+   inkscape:cy="287"
    inkscape:document-units="pt"
    inkscape:pagecheckerboard="0"
    inkscape:pageopacity="0.0"
@@ -47,8 +47,8 @@
    inkscape:window-height="1308"
    inkscape:window-maximized="0"
    inkscape:window-width="2560"
-   inkscape:window-x="0"
-   inkscape:window-y="25"
+   inkscape:window-x="215"
+   inkscape:window-y="196"
    inkscape:zoom="1"
    pagecolor="#ffffff"
    showgrid="false">
@@ -97,7 +97,10 @@
 	</g>
 </g>
 <g
-   id="g496">
+   id="g496"
+   inkscape:export-filename="/Users/dong/Downloads/g496.png"
+   inkscape:export-xdpi="900"
+   inkscape:export-ydpi="900">
 	<g
    id="g61">
 		<g
@@ -287,5 +290,8 @@
 <path
    class="st12"
    d="M223.6,269.1"
-   id="path500" />
+   id="path500"
+   inkscape:export-filename="/Users/dong/Downloads/g496.png"
+   inkscape:export-xdpi="900"
+   inkscape:export-ydpi="900" />
 </svg>
