@@ -25,7 +25,7 @@ You can use one of the following ways to use and install MetaboReport.
 
 #### (b) Inatall as an R package
 ```r
-remotes::install_github("YonghuiDong/MetReport")
+remotes::install_github("YonghuiDong/MetaboReport")
 ```
 >**Note**
 > After installation, you can use `library(MetaboReport); run_app()` or `MetaboReport::run_app()` to start the app.
