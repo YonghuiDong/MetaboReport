@@ -2,15 +2,19 @@
 
 Shiny app for metabolomics data preprocessing, statistical analysis, visualisation, and self-contained HTML reporting.
 
-## News
+---
 
-Release of v0.3.6
+## News :eyes:
+Updated on 2026.07.31
+
+**Release of v0.3.6**
 - User manual updated
 - Logo updated
 - Faster in data analysis
 - Bug fixed in report generation
 - Report content generated
 - Allow to generate Chinese report
+---
 
 ## Installation
 
@@ -30,6 +34,8 @@ remotes::install_github("YonghuiDong/MetaboReport")
 >**Note**
 > After installation, you can use `library(MetaboReport); run_app()` or `MetaboReport::run_app()` to start the app.
 
+---
+
 ## Project structure
 
 - `R/app_*.R` contains application configuration, shared state, UI, and server
@@ -47,13 +53,6 @@ remotes::install_github("YonghuiDong/MetaboReport")
 The supported public package API is intentionally small: `run_app()`. Analysis
 helpers are internal so their implementation can evolve without creating an
 accidental compatibility contract.
-
-## Report pipeline
-
-The report module only collects reactive analysis results. The pure
-`render_metabo_report()` service validates those results, creates an isolated
-working directory, renders `inst/app/www/Report.Rmd`, and copies the generated
-HTML to Shiny's exact download destination.
 
 ## Development checks
 
