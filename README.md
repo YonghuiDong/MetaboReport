@@ -2,18 +2,33 @@
 
 Shiny app for metabolomics data preprocessing, statistical analysis, visualisation, and self-contained HTML reporting.
 
-## Run the app
+## News
 
+Release of v0.3.6
+- User manual updated
+- Logo updated
+- Faster in data analysis
+- Bug fixed in report generation
+- Report content generated
+- Allow to generate Chinese report
+
+## Installation
+
+You can use one of the following ways to use and install MetaboReport.
+
+#### (a) Install as a standalone App
+
+>**Note**
+> This is the easiest way to install and use MetaboReport (recommended)
+
+<img align="center" height="50" src="https://edent.github.io/SuperTinyIcons/images/svg/windows.svg"> [Download](https://sourceforge.net/projects/metaboreport/)
+
+#### (b) Inatall as an R package
 ```r
-pkgload::load_all()
-MetaboReport::run_app()
+remotes::install_github("YonghuiDong/MetReport")
 ```
-
-Use `max_upload_mb` to change the upload limit:
-
-```r
-MetaboReport::run_app(max_upload_mb = 1000)
-```
+>**Note**
+> After installation, you can use `library(MetaboReport); run_app()` or `MetaboReport::run_app()` to start the app.
 
 ## Project structure
 
@@ -48,5 +63,5 @@ testthat::test_local()
 rcmdcheck::rcmdcheck(args = c("--no-manual", "--no-build-vignettes"))
 ```
 
-Restart the R session after changing module or report code; an already-running
-Shiny process keeps the previously loaded functions in memory.
+## Citation
+Dong, Y. and Malitsky, S., 2024. MetaboReport: from metabolomics data analysis to comprehensive reporting. Bioinformatics, 40(6), p.btae373. DOI: 10.1093/bioinformatics/btae373
