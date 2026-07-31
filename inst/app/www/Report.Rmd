@@ -69,13 +69,9 @@ myRawData <- myRawData %>%
 
 Metabolomics involves the comprehensive analysis of low-molecular-weight metabolites in biological systems. Three widely used analytical strategies address different research questions and applications:
 
-**Untargeted assay** (also called untargeted or global metabolomics) aims to reproducibly measure as many metabolites as feasible. It generally provides relative or semiquantitative abundance data rather than absolute concentrations, and metabolite identities are not necessarily known before data acquisition.
+**Untargeted Metabolomics**: aims to reproducibly measure as many metabolites as feasible. It generally provides relative or semiquantitative abundance data rather than absolute concentrations, and metabolite identities are not necessarily known before data acquisition.
 
-**Targeted assay** focuses on a defined set of metabolites whose identities are known before data acquisition. With appropriate calibration and standards, it can provide absolute concentrations.
-
-**Semitargeted assay** (often called metabolic profiling) lies between untargeted and targeted analysis. It measures a broader predefined set of metabolites and commonly reports relative or semiquantitative abundance.
-
-This report provides an overview of your data-analysis results. Brief explanations in each section help with interpretation. A few usage tips follow.
+**Targeted Metabolomics**: focuses on a defined set of metabolites whose identities are known before data acquisition. With appropriate calibration and standards, it can provide absolute concentrations.
 
 > <span style = "color : #FF8300">**Tips:**</span>
 >
@@ -611,7 +607,7 @@ DT::datatable(BPData,
 
 # Citation
 
-> Dong, Y. and Malitsky, S., 2024. MetaboReport: from metabolomics data analysis to comprehensive reporting. *Bioinformatics*, *40*(6), p.btae373.
+> Dong, Y. and Malitsky, S., 2024. MetaboReport: from metabolomics data analysis to comprehensive reporting. *Bioinformatics*, *40*(6), p.btae373. DOI: 10.1093/bioinformatics/btae373
 
 # References
 

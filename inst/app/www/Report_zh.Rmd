@@ -614,7 +614,7 @@ DT::datatable(BPData,
 
 # 软件引用
 
-> Dong, Y. and Malitsky, S., 2024. MetaboReport: from metabolomics data analysis to comprehensive reporting. *Bioinformatics*, *40*(6), p.btae373.
+> Dong, Y. and Malitsky, S., 2024. MetaboReport: from metabolomics data analysis to comprehensive reporting. *Bioinformatics*, *40*(6), p.btae373. DOI: 10.1093/bioinformatics/btae373
 
 # 参考文献
 
